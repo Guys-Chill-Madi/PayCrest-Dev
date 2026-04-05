@@ -1,0 +1,168 @@
+/* ---------------- MANAGER THEME OVERRIDES ---------------- */
+.manager-page.verification-page {
+  --primary: #3b82f6;
+  --primary-dark: #1d4ed8;
+  --bg: #f5f9ff;
+}
+
+.manager-page.verification-page {
+  background:
+    radial-gradient(circle at 12% 6%, rgba(59, 130, 246, 0.06), transparent 34%),
+    radial-gradient(circle at 92% 0%, rgba(37, 99, 235, 0.05), transparent 40%),
+    var(--bg);
+}
+
+.manager-page .verification-hero {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 18px 34px rgba(16, 33, 61, 0.2);
+}
+
+.manager-page .hero-title {
+  color: #ffffff;
+}
+
+.manager-page .verification-hero .hero-title {
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.manager-page .verification-hero .hero-sub {
+  font-weight: 600;
+}
+
+.manager-page .admin-review-hero {
+  align-items: center;
+}
+
+.manager-page .admin-review-hero .hero-main {
+  gap: 6px;
+}
+
+.manager-page .admin-review-hero .hero-actions {
+  margin-left: auto;
+}
+
+.manager-page .manager-review-card {
+  padding: 18px;
+}
+
+.manager-page .manager-review-card h3 {
+  margin: 0;
+}
+
+.manager-page .manager-review-card .detail-grid {
+  margin-top: 12px !important;
+}
+
+.manager-page .manager-review-actions {
+  justify-content: flex-start;
+  margin-top: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.manager-page .manager-review-actions--split {
+  justify-content: flex-start;
+}
+
+.manager-page .brand-logo {
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+.manager-page .brand-sub,
+.manager-page .hero-sub {
+  color: rgba(248, 250, 252, 0.94);
+}
+
+.chart-tooltip-bg {
+  fill: rgba(15, 23, 42, 0.92);
+}
+
+.chart-tooltip-text {
+  fill: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chart-svg {
+  display: block;
+}
+
+.chart-hit {
+  cursor: pointer;
+}
+
+.analytics-card .chart-svg {
+  overflow: visible;
+}
+
+/* ---------------- MINI CARDS ---------------- */
+.mini-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mini-card {
+  border: 1px solid rgba(219, 229, 242, 0.95);
+  background: rgba(248, 251, 255, 0.85);
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  box-shadow: 0 10px 22px rgba(16, 33, 61, 0.06);
+}
+
+.mini-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mini-card__title {
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+.mini-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .manager-page .admin-review-hero {
+    align-items: flex-start;
+  }
+
+  .manager-page .admin-review-hero .hero-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .manager-page .manager-review-actions,
+  .manager-page .manager-review-actions--split {
+    justify-content: stretch;
+    flex-direction: column;
+  }
+
+  .manager-page .manager-review-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 980px) {
+  .mini-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .mini-cards {
+    grid-template-columns: 1fr;
+  }
+}
+

@@ -1,0 +1,71 @@
+@keyframes wallet-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes wallet-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes wallet-focus-glow {
+  from {
+    box-shadow: 0 0 0 0 rgba(47, 107, 255, 0.1);
+  }
+  to {
+    box-shadow: 0 0 0 4px rgba(47, 107, 255, 0.16), 0 10px 24px rgba(47, 107, 255, 0.14);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallet-modal__backdrop,
+  .wallet-modal__panel,
+  .wallet-modal__amount,
+  .wallet-modal__cta,
+  .wallet-modal__secondary,
+  .wallet-modal__close {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .wallet-modal__backdrop {
+    padding: 14px;
+  }
+
+  .wallet-modal__panel {
+    width: min(420px, 100%);
+    border-radius: 16px;
+  }
+
+  .wallet-modal__hero {
+    padding: 16px 52px 10px 14px;
+  }
+
+  .wallet-modal__hint {
+    grid-template-columns: 1fr;
+  }
+
+  .wallet-modal__amount-row {
+    grid-template-columns: 1fr;
+  }
+
+  .wallet-modal__cta {
+    width: 100%;
+  }
+
+  .wallet-modal__footer {
+    padding-top: 6px;
+  }
+}

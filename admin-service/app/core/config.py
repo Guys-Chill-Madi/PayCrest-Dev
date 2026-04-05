@@ -1,0 +1,47 @@
+from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
+from typing import Optional
+
+
+class Settings(BaseSettings):
+    SERVICE_NAME: Optional[str] = "admin-service"
+    API_PREFIX: str = "/api"
+    PORT: Optional[int] = 3007
+    ENVIRONMENT: Optional[str] = "development"
+
+    MONGODB_URI: str = "mongodb://localhost:27017"
+    MONGODB_DB: str = "pycrest"
+
+    IDEMPOTENCY_ENABLED: bool = True
+    IDEMPOTENCY_TTL_HOURS: int = 24
+
+    JWT_SECRET: str = "CHANGE_ME"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 60 * 24
+
+    DEFAULT_IFSC: str = "PCIN01001"
+
+    CASHFREE_ENV: str = "sandbox"
+    CASHFREE_CLIENT_ID: Optional[str] = None
+    CASHFREE_CLIENT_SECRET: Optional[str] = None
+
+    UPLOAD_BASE_PATH: str = "./uploads"
+    INTERNAL_SERVICE_TOKEN: str = "CHANGE_ME"
+
+    AUTH_SERVICE_URL: Optional[str] = None
+    LOAN_SERVICE_URL: Optional[str] = None
+    EMI_SERVICE_URL: Optional[str] = None
+    WALLET_SERVICE_URL: Optional[str] = None
+    PAYMENT_SERVICE_URL: Optional[str] = None
+    VERIFICATION_SERVICE_URL: Optional[str] = None
+    ADMIN_SERVICE_URL: Optional[str] = None
+    MANAGER_SERVICE_URL: Optional[str] = None
+
+    model_config = ConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="allow"
+    )
+
+
+settings = Settings()

@@ -1,0 +1,229 @@
+.settlement-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(6px);
+  animation: settlement-backdrop-in 160ms ease-out both;
+}
+
+.settlement-modal__panel {
+  width: min(520px, 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(217, 229, 246, 0.95);
+  border-radius: 18px;
+  box-shadow: 0 18px 60px rgba(2, 6, 23, 0.35);
+  overflow: hidden;
+  transform-origin: 50% 80%;
+  animation: settlement-panel-in 220ms cubic-bezier(0.2, 0.9, 0.2, 1.05) both;
+}
+
+.settlement-modal__hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 18px 14px;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.3), transparent 55%),
+    linear-gradient(135deg, #1f5fbf 0%, #174a95 100%);
+  color: #ffffff;
+}
+
+.settlement-modal__hero-text h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.settlement-modal__hero-text p {
+  margin: 8px 0 0;
+  color: rgba(248, 250, 252, 0.9);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.settlement-modal__close {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(2, 6, 23, 0.18);
+  transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.settlement-modal__close:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 14px 28px rgba(2, 6, 23, 0.22);
+}
+
+.settlement-modal__close:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.settlement-modal__close:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.45);
+  outline-offset: 2px;
+}
+
+.settlement-modal__muted {
+  padding: 14px 18px 0;
+  color: #5a6b86;
+  font-size: 13px;
+}
+
+.settlement-modal__body {
+  padding: 14px 18px 4px;
+}
+
+.settlement-modal__rows {
+  display: grid;
+  gap: 10px;
+}
+
+.settlement-modal__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(217, 229, 246, 0.9);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.settlement-modal__row span {
+  color: #5a6b86;
+  font-size: 13px;
+}
+
+.settlement-modal__row strong {
+  color: #0f172a;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.settlement-modal__divider {
+  height: 1px;
+  background: rgba(219, 229, 242, 0.95);
+  margin: 14px 2px 12px;
+}
+
+.settlement-modal__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(254, 202, 202, 0.95);
+  background: rgba(254, 242, 242, 0.7);
+}
+
+.settlement-modal__total span {
+  color: #7f1d1d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.settlement-modal__total strong {
+  color: #7f1d1d;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+}
+
+.settlement-modal__note {
+  margin: 12px 0 0;
+  color: #5a6b86;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.settlement-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 12px 18px 16px;
+}
+
+.settlement-modal__btn {
+  border-radius: 14px;
+  padding: 10px 14px;
+  border: 1px solid rgba(183, 201, 227, 0.9);
+  background: rgba(255, 255, 255, 0.92);
+  color: #10213d;
+  font-weight: 900;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+.settlement-modal__btn:hover {
+  transform: translateY(-1px);
+  background: rgba(244, 248, 255, 1);
+  border-color: rgba(143, 174, 215, 1);
+  box-shadow: 0 10px 22px rgba(16, 33, 61, 0.08);
+}
+
+.settlement-modal__btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.settlement-modal__btn--danger {
+  border: none;
+  background: linear-gradient(135deg, #1f5fbf 0%, #174a95 100%);
+  color: #ffffff;
+  box-shadow: 0 14px 26px rgba(31, 95, 191, 0.26);
+}
+
+.settlement-modal__btn--danger:hover {
+  background: linear-gradient(135deg, #1f5fbf 0%, #174a95 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 18px 32px rgba(16, 33, 61, 0.28);
+}
+
+.settlement-modal__btn--danger:active {
+  background: linear-gradient(135deg, #1b55ab 0%, #143f80 100%);
+}
+
+.settlement-modal__btn--danger:focus-visible {
+  outline: 3px solid rgba(31, 95, 191, 0.35);
+  outline-offset: 2px;
+}
+
+@keyframes settlement-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes settlement-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

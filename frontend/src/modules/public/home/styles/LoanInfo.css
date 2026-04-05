@@ -1,0 +1,75 @@
+﻿/* Styles for LoanInfo.css */
+.page-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  background: #ffffff;
+  padding: 40px 80px;
+  box-sizing: border-box;
+}
+
+.loan-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 30px;
+  color: #000;
+}
+
+.loan-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 40px;
+}
+
+/* Left menu */
+.loan-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-weight: 600;
+}
+
+.loan-menu div {
+  padding-left: 14px;
+  cursor: pointer;
+}
+
+.loan-menu .active {
+  border-left: 4px solid #2563eb;
+  color: #2563eb;
+}
+
+/* Content area */
+.loan-content {
+  background: #ffffff;
+  padding: 10px 0;
+}
+
+.loan-content h3 {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #000;
+}
+
+.loan-list {
+  list-style: none;
+  padding: 0;
+}
+
+.loan-list li {
+  margin-bottom: 14px;
+  font-size: 16px;
+  display: flex;
+  gap: 10px;
+}
+
+.loan-list li::before {
+  content: "\2714";
+  color: #f59e0b;
+  font-weight: bold;
+}
+
+/* Calculator spacing */
+.calculator-section {
+  margin-top: 50px;
+}
+

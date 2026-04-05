@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-service
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount | default 1 }}
+  minReadySeconds: {{ include "common.minReadySeconds" . }}
+  selector:
+    matchLabels:
+      {{- include "common.selectorLabels" . | nindent 6 }}
+  strategy:
+    {{- include "common.rollingUpdateStrategy" . | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "common.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: admin-service-sa
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: admin-service
+          image: {{ include "common.image" . }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+          envFrom:
+            {{- include "common.envFrom" . | nindent 12 }}
+          livenessProbe:
+            {{- include "common.livenessProbe" . | nindent 12 }}
+          readinessProbe:
+            {{- include "common.readinessProbe" . | nindent 12 }}
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+          volumeMounts:
+            {{- include "common.uploadsVolumeMount" . | nindent 12 }}
+      volumes:
+        {{- include "common.uploadsVolume" . | nindent 8 }}

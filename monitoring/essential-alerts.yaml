@@ -1,0 +1,93 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: infrastructure-alerts
+  namespace: monitoring
+  labels:
+    app: kube-prometheus-stack
+    release: prometheus # Change this to your Helm release name if different
+spec:
+  groups:
+  - name: node-and-cluster
+    rules:
+    - alert: NodeDown
+      expr: up{job="node-exporter"} == 0
+      for: 5m
+      labels: { severity: critical }
+      annotations: { description: "Node {{ $labels.instance }} is unreachable." }
+    - alert: NodeHighCPU
+      expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+      for: 10m
+      labels: { severity: warning }
+      annotations: { description: "CPU usage on {{ $labels.instance }} is > 90%." }
+    - alert: NodeLowDisk
+      expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+      for: 5m
+      labels: { severity: critical }
+      annotations: { description: "Disk space on {{ $labels.instance }} is below 10%." }
+    - alert: NodeMemoryPressure
+      expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 < 10
+      for: 5m
+      labels: { severity: warning }
+      annotations: { description: "Node {{ $labels.instance }} has less than 10% RAM left." }
+    - alert: KubeletDown
+      expr: up{job="kubelet"} == 0
+      for: 5m
+      labels: { severity: critical }
+      annotations: { description: "Kubelet on {{ $labels.instance }} is down." }
+
+  - name: workload-health
+    rules:
+    - alert: PodCrashLooping
+      expr: rate(kube_pod_container_status_restarts_total[15m]) * 60 > 5
+      for: 5m
+      labels: { severity: critical }
+      annotations: { description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is restarting frequently." }
+    - alert: PendingPods
+      expr: kube_pod_status_phase{phase="Pending"} == 1
+      for: 10m
+      labels: { severity: warning }
+      annotations: { description: "Pod {{ $labels.pod }} has been Pending for 10+ minutes." }
+    - alert: DeploymentReplicasMismatch
+      expr: kube_deployment_spec_replicas != kube_deployment_status_replicas_available
+      for: 10m
+      labels: { severity: warning }
+      annotations: { description: "Deployment {{ $labels.deployment }} mismatch: {{ $value }} replicas missing." }
+    - alert: ContainerOOMKilled
+      expr: kube_pod_container_status_terminated_reason{reason="OOMKilled"} > 0
+      for: 1m
+      labels: { severity: critical }
+      annotations: { description: "Container in pod {{ $labels.pod }} was OOMKilled." }
+    - alert: HPAAtMaxCapacity
+      expr: kube_horizontalpodautoscaler_status_current_replicas == kube_horizontalpodautoscaler_spec_max_replicas
+      for: 5m
+      labels: { severity: warning }
+      annotations: { description: "HPA {{ $labels.horizontalpodautoscaler }} is at max replicas." }
+
+  - name: network-and-api
+    rules:
+    - alert: KubeAPILatency
+      expr: histogram_quantile(0.99, sum by (le) (rate(apiserver_request_duration_seconds_bucket[5m]))) > 1
+      for: 5m
+      labels: { severity: warning }
+      annotations: { description: "99th percentile API latency is over 1s." }
+    - alert: CoreDNSErrors
+      expr: rate(coredns_dns_responses_total{code="SERVFAIL"}[5m]) > 0
+      for: 5m
+      labels: { severity: critical }
+      annotations: { description: "CoreDNS is returning SERVFAIL for cluster lookups." }
+    - alert: IngressHighErrorRate
+      expr: rate(nginx_ingress_controller_requests{status=~"5.."}[5m]) / rate(nginx_ingress_controller_requests[5m]) > 0.05
+      for: 5m
+      labels: { severity: critical }
+      annotations: { description: "Ingress {{ $labels.ingress }} error rate is > 5%." }
+    - alert: PersistentVolumeFull
+      expr: kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes < 0.1
+      for: 5m
+      labels: { severity: critical }
+      annotations: { description: "PV {{ $labels.persistentvolumeclaim }} is 90% full." }
+    - alert: PrometheusTargetMissing
+      expr: up == 0
+      for: 10m
+      labels: { severity: critical }
+      annotations: { description: "A service target {{ $labels.instance }} has disappeared from scraping." }

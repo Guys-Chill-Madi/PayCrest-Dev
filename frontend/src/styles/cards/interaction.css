@@ -1,0 +1,332 @@
+@media (hover: none) {
+  .loan-card--vehicle h3 {
+    margin-bottom: 10px;
+  }
+
+  .loan-card--vehicle p {
+    max-height: 80px;
+    opacity: 100;
+    margin: 8px 0 12px;
+    transform: translateY(0);
+  }
+
+  .loan-card--vehicle button {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    max-height: 52px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}
+
+.icon {
+  font-size: 28px;
+  letter-spacing: 0.12em;
+  font-weight: 800;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+
+.icon-vehicle {
+  width: 116px;
+  height: 72px;
+  padding: 0;
+  font-size: 0;
+  color: transparent;
+  background: #eff6ff url("../vehicle_loan_enhanced.png") center / cover no-repeat;
+}
+
+.icon-hidden {
+  display: none;
+}
+
+.loan-card--personal {
+  background: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.42);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.loan-card--personal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: url("../personal_loan_enhanced.png") center / cover no-repeat;
+  opacity: 1;
+  transform: translateY(8%);
+  transition: transform 0.25s ease;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.loan-card--personal::before {
+  opacity: 1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(219, 234, 254, 0.52) 72%, rgba(191, 219, 254, 0.72));
+  transition: background 0.28s ease;
+  z-index: 1;
+}
+
+.loan-card--personal > * {
+  z-index: 2;
+}
+
+.loan-card--personal h3,
+.loan-card--personal p {
+  color: #0f172a;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.45);
+}
+
+.loan-card--personal h3 {
+  margin-top: auto;
+  margin-bottom: 6px;
+  font-size: 26px;
+  font-weight: 700;
+  transition: transform 0.28s ease, margin-bottom 0.28s ease;
+}
+
+.loan-card--personal p {
+  max-height: none;
+  opacity: 1;
+  margin: 0 0 12px;
+  overflow: visible;
+  transform: translateY(0);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.loan-card--personal button {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  margin-top: 0;
+  max-height: none;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  overflow: visible;
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+}
+
+.loan-card--personal button:hover {
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.36);
+}
+
+.loan-card--personal:hover h3,
+.loan-card--personal:focus-within h3 {
+  margin-bottom: 8px;
+  transform: translateY(-2px);
+}
+
+.loan-card--personal:hover p,
+.loan-card--personal:focus-within p {
+  transform: translateY(-2px);
+}
+
+.loan-card--personal:hover button,
+.loan-card--personal:focus-within button {
+  transform: translateY(-2px);
+}
+
+.loan-card--personal:hover,
+.loan-card--personal:focus-within {
+  border-color: #93c5fd;
+}
+
+.loan-card--personal:hover::after,
+.loan-card--personal:focus-within::after {
+  transform: translateY(4%);
+}
+
+.loan-card--personal:hover::before,
+.loan-card--personal:focus-within::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(191, 219, 254, 0.45) 62%, rgba(147, 197, 253, 0.65));
+}
+
+@media (hover: none) {
+  .loan-card--personal h3 {
+    margin-bottom: 10px;
+  }
+
+  .loan-card--personal p {
+    max-height: 80px;
+    opacity: 1;
+    margin: 8px 0 12px;
+    transform: translateY(0);
+  }
+
+  .loan-card--personal button {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    max-height: 52px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}
+
+.loan-card--home {
+  background: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.42);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.loan-card--home::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: url("../home_loan_enhanced.png") center / cover no-repeat;
+  opacity: 1;
+  transform: translateY(8%);
+  transition: transform 0.25s ease;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.loan-card--home::before {
+  opacity: 1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(219, 234, 254, 0.52) 72%, rgba(191, 219, 254, 0.72));
+  transition: background 0.28s ease;
+  z-index: 1;
+}
+
+.loan-card--home > * {
+  z-index: 2;
+}
+
+.loan-card--home h3,
+.loan-card--home p {
+  color: #0f172a;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.45);
+}
+
+.loan-card--home h3 {
+  margin-top: auto;
+  margin-bottom: 6px;
+  font-size: 26px;
+  font-weight: 700;
+  transition: transform 0.28s ease, margin-bottom 0.28s ease;
+}
+
+.loan-card--home p {
+  max-height: none;
+  opacity: 1;
+  margin: 0 0 12px;
+  overflow: visible;
+  transform: translateY(0);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.loan-card--home button {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  margin-top: 0;
+  max-height: none;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  overflow: visible;
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+}
+
+.loan-card--home button:hover {
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.36);
+}
+
+.loan-card--home:hover h3,
+.loan-card--home:focus-within h3 {
+  margin-bottom: 8px;
+  transform: translateY(-2px);
+}
+
+.loan-card--home:hover p,
+.loan-card--home:focus-within p {
+  transform: translateY(-2px);
+}
+
+.loan-card--home:hover button,
+.loan-card--home:focus-within button {
+  transform: translateY(-2px);
+}
+
+.loan-card--home:hover,
+.loan-card--home:focus-within {
+  border-color: #93c5fd;
+}
+
+.loan-card--home:hover::after,
+.loan-card--home:focus-within::after {
+  transform: translateY(4%);
+}
+
+.loan-card--home:hover::before,
+.loan-card--home:focus-within::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(191, 219, 254, 0.45) 62%, rgba(147, 197, 253, 0.65));
+}
+
+@media (hover: none) {
+  .loan-card--home h3 {
+    margin-bottom: 10px;
+  }
+
+  .loan-card--home p {
+    max-height: 80px;
+    opacity: 1;
+    margin: 8px 0 12px;
+    transform: translateY(0);
+  }
+
+  .loan-card--home button {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    max-height: 52px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}
+
+.loan-card--education {
+  background: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.42);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.loan-card--education::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: url("../education_loan_enhanced.png") center / cover no-repeat;
+  opacity: 1;
+  transform: translateY(8%);
+  transition: transform 0.25s ease;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Home loan product images */

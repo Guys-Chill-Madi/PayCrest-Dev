@@ -1,0 +1,64 @@
+﻿/* Styles for persinfo.css */
+.info-page {
+  padding: 40px 80px;
+  background: #ffffff;
+}
+
+.info-page h1 {
+  font-size: 36px;
+  margin-bottom: 30px;
+}
+
+.info-container {
+  display: flex;
+  gap: 80px;
+  margin-bottom: 60px;
+}
+
+/* LEFT MENU */
+.info-menu {
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.info-menu button {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 12px 10px;
+  font-size: 18px;
+  cursor: pointer;
+  position: relative;
+}
+
+.info-menu button.active {
+  font-weight: 600;
+}
+
+.info-menu button.active::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background: #2563eb;
+  border-radius: 2px;
+}
+
+/* RIGHT CONTENT */
+.info-content {
+  flex: 1;
+}
+
+.info-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.info-content li {
+  font-size: 18px;
+  margin-bottom: 18px;
+}
+

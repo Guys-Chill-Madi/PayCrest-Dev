@@ -1,0 +1,177 @@
+.portal-shell {
+  background: transparent;
+}
+
+.portal-main {
+  padding: var(--ds-space-5);
+}
+
+.portal-view {
+  width: min(1320px, 100%);
+}
+
+.portal-view--dashboard,
+.portal-view--emi,
+.portal-view--loans,
+.portal-view--track,
+.portal-view--profile,
+.portal-view--wallet {
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-radius-xl);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  padding: var(--ds-space-5);
+  box-shadow: var(--ds-shadow-2);
+}
+
+.portal-tabs--top {
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-radius-lg);
+  background: #fff;
+  box-shadow: var(--ds-shadow-1);
+  gap: var(--ds-space-2);
+}
+
+.portal-tabs--top .portal-tab {
+  border-radius: var(--ds-radius-md);
+  min-height: 44px;
+  padding: 0 var(--ds-space-4);
+  color: #344054;
+  border: 1px solid transparent;
+}
+
+.portal-tabs--top .portal-tab.active {
+  background: var(--ds-primary-soft);
+  color: var(--ds-primary-strong);
+  border-color: #bdd0ff;
+}
+
+.portal-status-row {
+  width: min(1320px, 100%);
+  margin: 0 auto var(--ds-space-4);
+  display: grid;
+  gap: var(--ds-space-3);
+}
+
+.portal-inline-alert {
+  border-radius: var(--ds-radius-md);
+  border: 1px solid #f1c0bd;
+  background: var(--ds-error-soft);
+  color: #7a271a;
+  padding: 10px 12px;
+}
+
+.portal-loading-strip {
+  border-radius: var(--ds-radius-md);
+  border: 1px solid #bdd0ff;
+  background: var(--ds-info-soft);
+  color: #1849a9;
+  padding: 10px 12px;
+}
+
+.custx-empty,
+.bankdash-empty,
+.chart-empty {
+  border-style: solid;
+  border-color: var(--ds-border);
+  background: #fff;
+}
+
+.custx-table-wrap,
+.bankdash-table-wrap {
+  border-radius: var(--ds-radius-md);
+}
+
+.custx-table thead th,
+.bankdash-table thead th {
+  background: #f7f9fd;
+}
+
+.custx-btn,
+.portal-btn-secondary {
+  min-height: 44px;
+  border-radius: var(--ds-radius-md);
+}
+
+.custx-btn.primary,
+.portal-btn-secondary {
+  background: linear-gradient(135deg, var(--ds-primary), var(--ds-primary-strong));
+}
+
+.custx-form input,
+.custx-form select,
+.custx-form textarea {
+  border-radius: var(--ds-radius-md);
+  border-color: var(--ds-border);
+}
+
+.emi-overview-card {
+  border-radius: var(--ds-radius-lg);
+  border-color: var(--ds-border);
+}
+
+.profile-card {
+  border-radius: var(--ds-radius-lg);
+}
+
+.profile-actions .portal-btn-danger {
+  min-height: 44px;
+  border-radius: var(--ds-radius-md);
+}
+
+.bankdash-actions-row select {
+  min-height: 40px;
+  border-radius: var(--ds-radius-sm);
+  border: 1px solid var(--ds-border);
+}
+
+.wallet-filter-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ds-space-2);
+  align-items: end;
+}
+
+.wallet-filter-row label {
+  display: grid;
+  gap: 6px;
+  color: var(--ds-text-muted);
+  font-size: var(--ds-caption);
+}
+
+.wallet-filter-row input,
+.wallet-filter-row select {
+  min-height: var(--ds-input-h);
+  border-radius: var(--ds-radius-md);
+  border: 1px solid var(--ds-border);
+  padding: 0 10px;
+}
+
+.wallet-mobile-list {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .portal-main {
+    padding: var(--ds-space-3);
+  }
+
+  .wallet-filter-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .portal-view--dashboard,
+  .portal-view--emi,
+  .portal-view--loans,
+  .portal-view--track,
+  .portal-view--profile,
+  .portal-view--wallet {
+    padding: var(--ds-space-3);
+  }
+
+  .wallet-filter-row {
+    grid-template-columns: 1fr;
+  }
+}
+

@@ -1,0 +1,436 @@
+/* ---------------- DOCUMENT PREVIEW MODAL ---------------- */
+.doc-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+}
+
+.doc-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(6px);
+}
+
+.doc-modal__panel {
+  position: relative;
+  width: min(980px, calc(100% - 22px));
+  height: min(78vh, 720px);
+  margin: 8vh auto 0;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.25);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+/* Keep document preview clear of the fixed 220px staff sidebar. */
+.with-sidebar .doc-modal {
+  left: 220px;
+  width: calc(100% - 220px);
+}
+
+.with-sidebar .doc-modal__panel {
+  width: min(1180px, calc(100% - 30px));
+  height: min(82vh, 780px);
+  margin: 6vh auto 0;
+  border-radius: 18px;
+}
+
+.with-sidebar .doc-modal__head {
+  padding: 14px 18px;
+}
+
+.with-sidebar .doc-modal__body {
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+  background: #f1f5f9;
+}
+
+.doc-modal__head {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.doc-modal__title {
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+.doc-modal__body {
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.doc-modal__frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #ffffff;
+}
+
+.doc-modal__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #ffffff;
+}
+
+@media (max-width: 980px) {
+  .with-sidebar .doc-modal {
+    left: 0;
+    width: 100%;
+  }
+
+  .with-sidebar .doc-modal__panel {
+    width: min(980px, calc(100% - 16px));
+    height: min(80vh, 740px);
+    margin: 7vh auto 0;
+  }
+}
+
+/* ---------------- TEXT PROMPT MODAL ---------------- */
+.prompt-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: grid;
+  place-items: start center;
+  padding: 12vh 12px 20px;
+}
+
+.prompt-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(6px);
+}
+
+.prompt-modal__panel {
+  position: relative;
+  width: min(560px, calc(100% - 22px));
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.25);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.prompt-modal__head {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.prompt-modal__title {
+  font-weight: 900;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.prompt-modal__body {
+  padding: 14px 16px 4px;
+  display: grid;
+  gap: 8px;
+}
+
+.prompt-modal__label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.prompt-modal__input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(203, 213, 225, 0.95);
+  background: #ffffff;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.04);
+  transition: border-color .15s ease, box-shadow .15s ease;
+  resize: vertical;
+}
+
+.prompt-modal__input:focus {
+  border-color: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
+}
+
+.prompt-modal__hint {
+  font-size: 12px;
+  padding-bottom: 10px;
+}
+
+.prompt-modal__actions {
+  padding: 12px 16px 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ---------------- MPIN MODAL ---------------- */
+.mpin-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.mpin-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.3);
+  backdrop-filter: blur(6px);
+}
+
+.mpin-modal__panel {
+  position: relative;
+  width: min(400px, calc(100% - 20px));
+  background: linear-gradient(180deg, #f6faff 0%, #eaf4ff 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16px 34px rgba(47, 107, 255, 0.2), 0 24px 56px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+}
+
+.mpin-modal__head {
+  padding: 18px 18px 6px;
+  text-align: center;
+}
+
+.mpin-modal__title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.24rem;
+  font-weight: 800;
+}
+
+.mpin-modal__sub {
+  margin: 8px 0 0;
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+.mpin-modal__body {
+  padding: 8px 16px 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.mpin-modal__show-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.mpin-modal__show-btn {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(255, 255, 255, 0.9);
+  color: #334155;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mpin-modal__show-btn:hover {
+  background: #ffffff;
+  border-color: rgba(100, 116, 139, 0.56);
+}
+
+.mpin-modal__show-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.mpin-modal__digits {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.mpin-modal__input {
+  width: 100%;
+  max-width: 260px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid rgba(47, 107, 255, 0.28);
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.15em;
+  color: #0f172a;
+  outline: none;
+  padding: 0 12px;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.mpin-modal__input:focus {
+  border-color: rgba(47, 107, 255, 0.76);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(47, 107, 255, 0.16);
+}
+
+.mpin-modal__digits.is-shake {
+  animation: mpin-shake 360ms ease;
+}
+
+.mpin-modal__digit {
+  width: 56px;
+  height: 58px;
+  border-radius: 14px;
+  border: 1px solid rgba(47, 107, 255, 0.28);
+  background: rgba(255, 255, 255, 0.86);
+  font-size: 1.38rem;
+  font-weight: 800;
+  text-align: center;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease, transform 120ms ease;
+}
+
+.mpin-modal__digit:focus {
+  border-color: rgba(47, 107, 255, 0.76);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(47, 107, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.mpin-modal__digit::-ms-reveal,
+.mpin-modal__digit::-ms-clear {
+  display: none;
+}
+
+.mpin-modal__helper {
+  margin: -4px 0 0;
+  font-size: 0.84rem;
+  text-align: center;
+}
+
+.mpin-modal__helper--error {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.mpin-modal__helper--success {
+  color: #15803d;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mpin-modal__tick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.14);
+  animation: mpin-tick-pop 260ms ease-out;
+}
+
+.mpin-modal__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.mpin-modal__btn {
+  flex: 1;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  background: rgba(255, 255, 255, 0.88);
+  color: #1f2937;
+  font-weight: 700;
+  padding: 11px 14px;
+  cursor: pointer;
+  transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.mpin-modal__btn:hover {
+  transform: translateY(-1px);
+  background: #ffffff;
+  border-color: rgba(100, 116, 139, 0.52);
+}
+
+.mpin-modal__btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.mpin-modal__btn--primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, #2f6bff 0%, #3f8cff 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(47, 107, 255, 0.28);
+}
+
+.mpin-modal__btn--primary:hover {
+  background: linear-gradient(135deg, #2f6bff 0%, #3f8cff 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 14px 24px rgba(47, 107, 255, 0.34);
+}
+
+@keyframes mpin-shake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes mpin-tick-pop {
+  0% { transform: scale(0.7); opacity: 0.4; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@media (max-width: 520px) {
+  .mpin-modal {
+    padding: 14px;
+    align-items: center;
+  }
+
+  .mpin-modal__panel {
+    width: min(360px, calc(100% - 12px));
+  }
+
+  .mpin-modal__digit {
+    width: 52px;
+    height: 54px;
+    font-size: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mpin-modal__digits.is-shake,
+  .mpin-modal__tick,
+  .mpin-modal__digit,
+  .mpin-modal__btn {
+    animation: none !important;
+    transition: none !important;
+  }
+}

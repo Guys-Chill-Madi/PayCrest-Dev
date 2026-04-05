@@ -1,0 +1,896 @@
+﻿:root {
+  --bg: #f3f7fc;
+  --surface: #ffffff;
+  --surface-soft: #f8fbff;
+  --border: #dbe5f2;
+  --text-primary: #10213d;
+  --text-secondary: #5a6b86;
+  --primary: #1f5fbf;
+  --primary-dark: #174a95;
+  --success-bg: #e6f7ef;
+  --success-text: #1d7a4b;
+  --warning-bg: #fff2e2;
+  --warning-text: #9a5b19;
+}
+
+.dashboard-container {
+  --carousel-height: calc(100vh - 150px);
+  width: 100%;
+  height: 100vh;
+  padding: 24px;
+  box-sizing: border-box;
+  background: var(--bg);
+  font-family: "Segoe UI", "Poppins", sans-serif;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.dashboard-container::-webkit-scrollbar {
+  display: none;
+}
+
+.dashboard-title {
+  margin: 0;
+  text-align: left;
+  font-size: clamp(1.45rem, 2.2vw, 1.85rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+
+.dashboard-subtitle {
+  margin: 8px 0 18px;
+  max-width: 760px;
+  text-align: left;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.loan-carousel {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  width: 100%;
+  height: auto;
+  padding-right: 8px;
+  overflow: visible;
+  scroll-snap-type: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.loan-row-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  min-height: auto;
+  align-items: stretch;
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 0.55s ease, transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform, opacity;
+}
+
+.loan-row-group.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.loan-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.loan-card {
+  position: relative;
+  isolation: isolate;
+  height: auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 18px rgba(16, 33, 61, 0.08);
+  scroll-snap-align: start;
+  opacity: 0;
+  transform: translateY(34px) scale(0.98);
+  filter: blur(6px);
+  transition:
+    opacity 0.58s ease,
+    transform 0.62s cubic-bezier(0.22, 0.61, 0.36, 1),
+    filter 0.62s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  will-change: transform, opacity;
+}
+
+.loan-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #7faee8, transparent);
+  opacity: 0;
+  transform: scaleX(0.6);
+  transition: opacity 0.25s ease, transform 0.35s ease;
+  z-index: 2;
+}
+
+.loan-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    112deg,
+    rgba(255, 255, 255, 0) 35%,
+    rgba(255, 255, 255, 0.32) 49%,
+    rgba(255, 255, 255, 0) 63%
+  );
+  transform: translateX(-130%);
+  pointer-events: none;
+}
+
+.loan-row-group.is-visible .loan-card {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+.loan-row-group .loan-card:first-child {
+  transform: translateY(34px) scale(0.98);
+}
+
+.loan-row-group .loan-card:nth-child(2) {
+  transform: translateY(34px) scale(0.98);
+}
+
+.loan-row-group.is-visible .loan-card:first-child {
+  transition-delay: 0.02s;
+}
+
+.loan-row-group.is-visible .loan-card:nth-child(2) {
+  transition-delay: 0.1s;
+}
+
+.loan-card:hover {
+  opacity: 1;
+  transform: translateY(-8px) scale(1.01);
+  filter: blur(0);
+  border-color: #c7d7ee;
+  box-shadow: 0 18px 36px rgba(16, 33, 61, 0.2);
+}
+
+.loan-card:hover::before {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.loan-row-group.is-visible .loan-card::after {
+  animation: card-sheen 1.1s ease;
+}
+
+.loan-row-group.is-visible .loan-card:nth-child(2)::after {
+  animation-delay: 0.12s;
+}
+
+.loan-card:hover .loan-visual-panel {
+  filter: saturate(1.08) contrast(1.03);
+}
+
+.loan-card:hover .loan-icon {
+  transform: scale(1.04);
+  box-shadow: 0 6px 14px rgba(10, 30, 60, 0.22);
+}
+
+.loan-card:hover .loan-photo {
+  transform: scale(1.03);
+}
+
+.loan-card:hover .loan-visual-title {
+  transform: translateY(-1px);
+}
+
+.loan-icon {
+  transition: transform 0.22s ease, box-shadow 0.25s ease;
+}
+
+.loan-photo {
+  transition: transform 0.22s ease;
+}
+
+.loan-visual-title {
+  transition: transform 0.2s ease;
+}
+
+.loan-visual-panel {
+  position: relative;
+  padding: 26px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #ffffff;
+  border-right: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.loan-card.personal .loan-visual-panel,
+.loan-card.home .loan-visual-panel,
+.loan-card.vehicle .loan-visual-panel,
+.loan-card.education .loan-visual-panel {
+  background: linear-gradient(180deg, #1f5fbf 0%, #174a95 100%);
+}
+
+.popular-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 6;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #174a95;
+  background: #e6effc;
+  box-shadow: 0 4px 12px rgba(16, 33, 61, 0.14);
+}
+
+.bubble {
+  display: none;
+}
+
+.loan-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.loan-photo {
+  width: min(100%, 176px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(16, 33, 61, 0.2));
+}
+
+.loan-visual-title {
+  margin: 0;
+  text-align: center;
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.loan-content-panel {
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+  background: #ffffff;
+  min-width: 0;
+}
+
+.loan-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.loan-heading {
+  display: grid;
+  gap: 6px;
+}
+
+.section-block {
+  display: grid;
+  gap: 8px;
+}
+
+.loan-top .category-pill,
+.loan-top .loan-title,
+.loan-top .loan-description,
+.loan-top .status-chip,
+.section-block,
+.card-actions,
+.kyc-warning {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.45s ease, transform 0.5s ease;
+}
+
+.loan-row-group.is-visible .loan-top .category-pill,
+.loan-row-group.is-visible .loan-top .loan-title,
+.loan-row-group.is-visible .loan-top .loan-description,
+.loan-row-group.is-visible .loan-top .status-chip,
+.loan-row-group.is-visible .section-block,
+.loan-row-group.is-visible .card-actions,
+.loan-row-group.is-visible .kyc-warning {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.loan-top .category-pill {
+  transition-delay: 0.1s;
+}
+
+.loan-top .loan-title {
+  transition-delay: 0.16s;
+}
+
+.loan-top .loan-description {
+  transition-delay: 0.22s;
+}
+
+.loan-top .status-chip {
+  transition-delay: 0.28s;
+}
+
+.loan-content-panel .section-block:nth-of-type(1) {
+  transition-delay: 0.34s;
+}
+
+.loan-content-panel .section-block:nth-of-type(3) {
+  transition-delay: 0.46s;
+}
+
+.loan-content-panel .section-block:nth-of-type(2) {
+  transition-delay: 0.4s;
+}
+
+.loan-content-panel .card-actions {
+  transition-delay: 0.52s;
+}
+
+.loan-content-panel .kyc-warning {
+  transition-delay: 0.58s;
+}
+
+.loan-row-group.is-visible .loan-card:nth-child(2) .category-pill {
+  transition-delay: 0.18s;
+}
+
+.loan-row-group.is-visible .loan-card:nth-child(2) .loan-title {
+  transition-delay: 0.24s;
+}
+
+.loan-row-group.is-visible .loan-card:nth-child(2) .loan-description {
+  transition-delay: 0.3s;
+}
+
+.loan-row-group.is-visible .loan-card:nth-child(2) .status-chip {
+  transition-delay: 0.36s;
+}
+
+.category-pill {
+  display: inline-block;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--primary);
+  background: #eaf1fd;
+}
+
+.loan-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.22rem;
+  line-height: 1.2;
+}
+
+.loan-description {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  font-size: 0.88rem;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  width: fit-content;
+  white-space: nowrap;
+}
+
+.status-chip.approved {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.status-chip.locked {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.loan-info-box {
+  border-radius: 10px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+}
+
+.loan-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  font-size: 0.88rem;
+  transition: background-color 0.2s ease, padding-left 0.2s ease, padding-right 0.2s ease;
+}
+
+.loan-row + .loan-row {
+  border-top: 1px solid var(--border);
+}
+
+.loan-row span {
+  color: var(--text-secondary);
+}
+
+.loan-row strong {
+  color: var(--text-primary);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.loan-row:hover {
+  background: #f2f7ff;
+  padding-left: 6px;
+  padding-right: 6px;
+  border-radius: 6px;
+}
+
+.eligibility-box {
+  border-radius: 10px;
+  border: 1px solid #c9daf7;
+  background: #edf3ff;
+  padding: 12px;
+}
+
+.section-title {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #355179;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.eligibility-grid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.eligibility-grid span {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.eligibility-grid strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--primary);
+  font-size: 1.15rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.feature-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.feature-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #43556f;
+  font-size: 0.86rem;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.feature-list li::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2f7adf;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.feature-list li:hover {
+  color: #243b5d;
+  transform: translateX(2px);
+}
+
+.feature-list li:hover::before {
+  transform: scale(1.2);
+  background: #1f5fbf;
+}
+
+.card-actions {
+  margin-top: 2px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.btn-primary,
+.btn-outline {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-outline {
+  background: #ffffff;
+  border-color: #a7bddb;
+  color: #274a7a;
+}
+
+.btn-outline:hover {
+  background: #f4f8ff;
+  border-color: #7f9fc8;
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-primary:focus-visible,
+.btn-outline:focus-visible {
+  outline: 3px solid #bfd3ef;
+  outline-offset: 2px;
+}
+
+.kyc-warning {
+  margin: 4px 0 0;
+  color: #bc4f14;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 992px) {
+  .dashboard-container {
+    --carousel-height: auto;
+    padding: 18px 14px 20px;
+  }
+
+  .loan-carousel {
+    padding-right: 0;
+  }
+
+  .loan-row-group {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    min-height: auto;
+    align-items: stretch;
+  }
+
+  .loan-row-group .loan-card:first-child,
+  .loan-row-group .loan-card:nth-child(2) {
+    transform: translateY(30px) scale(0.985);
+  }
+
+  .loan-card {
+    height: auto;
+    min-height: 0;
+    grid-template-columns: minmax(180px, 34%) 1fr;
+  }
+
+  .loan-title {
+    font-size: 1.25rem;
+  }
+
+  .loan-description {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-container {
+    padding: 14px 12px 18px;
+  }
+
+  .dashboard-title,
+  .dashboard-subtitle {
+    text-align: left;
+  }
+
+  .loan-carousel {
+    padding-right: 0;
+  }
+
+  .loan-card {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .loan-visual-panel {
+    min-height: 170px;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  .loan-content-panel {
+    padding: 14px;
+  }
+
+  .loan-photo {
+    width: min(100%, 150px);
+  }
+
+  .loan-title {
+    font-size: 1.12rem;
+  }
+
+  .loan-description {
+    font-size: 0.86rem;
+  }
+
+  .loan-row {
+    font-size: 0.84rem;
+  }
+
+  .loan-top {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .eligibility-grid,
+  .card-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loan-card,
+  .loan-top .category-pill,
+  .loan-top .loan-title,
+  .loan-top .loan-description,
+  .loan-top .status-chip,
+  .section-block,
+  .card-actions,
+  .kyc-warning,
+  .loan-row-group {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .loan-card::after {
+    animation: none;
+  }
+}
+
+@keyframes card-sheen {
+  0% {
+    transform: translateX(-130%);
+  }
+  100% {
+    transform: translateX(130%);
+  }
+}
+
+/* PAGE */
+.dashboard-page {
+  font-family: "Segoe UI", sans-serif;
+  background: #f5f9ff;
+  min-height: 100vh;
+}
+
+/* NAVBAR */
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(90deg, #1e3a8a, #2563eb);
+  color: white;
+  padding: 14px 32px;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.logo span {
+  margin-left: 6px;
+}
+
+.nav-links span {
+  margin: 0 12px;
+  cursor: pointer;
+  opacity: 0.9;
+}
+
+.nav-links .active {
+  border-bottom: 2px solid white;
+  padding-bottom: 4px;
+}
+
+.user-chip {
+  background: white;
+  color: #1e3a8a;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* CONTENT */
+.dashboard-content {
+  padding: 32px;
+}
+
+.welcome-text {
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+/* KYC BANNER */
+.kyc-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #e0ecff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 30px;
+}
+
+.kyc-left p {
+  margin: 6px 0 0;
+  color: #1e3a8a;
+}
+
+/* GRID */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+}
+
+/* CARD */
+.card {
+  background: white;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+}
+
+.card h3 {
+  margin-bottom: 18px;
+}
+
+/* ACCOUNT */
+.account-info p {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  color: #475569;
+}
+
+.account-info strong {
+  color: #0f172a;
+}
+
+/* LOCKED */
+.locked ul {
+  padding-left: 18px;
+  color: #475569;
+}
+
+.locked li {
+  margin: 8px 0;
+}
+
+/* BUTTONS */
+.btn-primary {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-outline {
+  background: white;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-top: 16px;
+  cursor: pointer;
+}
+
+.btn-outline:hover {
+  background: #2563eb;
+  color: white;
+}
+
+.full {
+  width: 100%;
+  margin-top: 16px;
+}
+
+/* Keep paired action buttons visually identical in size. */
+.card-actions .btn-primary,
+.card-actions .btn-outline,
+.loan-calc-actions .btn-primary,
+.loan-calc-actions .btn-outline {
+  min-height: 42px;
+  padding: 10px 16px;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Final dashboard override: make EMI + Apply buttons exactly same size in loan cards. */
+.loan-card .card-actions .btn-primary,
+.loan-card .card-actions .btn-outline {
+  width: 100%;
+  min-height: 44px;
+  height: 44px;
+  padding: 0 16px !important;
+  margin-top: 0 !important;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loan-card .card-actions .btn-outline {
+  border-width: 1px !important;
+}
+

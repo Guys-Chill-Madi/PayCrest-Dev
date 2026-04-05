@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pycrest-global-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  UPLOAD_BASE_PATH: "/app/uploads"
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+  PYTHONPATH: "/app"

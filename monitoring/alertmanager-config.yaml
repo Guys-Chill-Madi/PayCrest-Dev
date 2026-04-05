@@ -1,0 +1,24 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'slack-notifications'
+
+receivers:
+- name: 'slack-notifications'
+  slack_configs:
+  - api_url: ${SLACK_WEBHOOK_URL}
+    channel: '#incoming-alerts'
+    send_resolved: true
+    icon_emoji: ':fire:'
+    title: '[{{ .Status | upper }}] {{ .GroupLabels.alertname }}'
+    text: >-
+      {{ range .Alerts }}
+        *Description:* {{ .Annotations.description }}
+        *Severity:* {{ .Labels.severity }}
+        *Graph:* <{{ .GeneratorURL }}|View in Prometheus>
+      {{ end }}

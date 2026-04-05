@@ -1,0 +1,152 @@
+.loan-card--img1::after {
+  background: url("./img1.png") center / cover no-repeat;
+}
+
+.loan-card--img2::after {
+  background: url("./img2.png") center / cover no-repeat;
+}
+
+.loan-card--img3::after {
+  background: url("./img3.png") center / cover no-repeat;
+}
+
+.loan-card--img4::after {
+  background: url("./img4.png") center / cover no-repeat;
+}
+
+.loan-card--education::before {
+  opacity: 1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(219, 234, 254, 0.52) 72%, rgba(191, 219, 254, 0.72));
+  transition: background 0.28s ease;
+  z-index: 1;
+}
+
+.loan-card--education > * {
+  z-index: 2;
+}
+
+.loan-card--education h3,
+.loan-card--education p {
+  color: #0f172a;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.45);
+}
+
+.loan-card--education h3 {
+  margin-top: auto;
+  margin-bottom: 6px;
+  font-size: 26px;
+  font-weight: 700;
+  transition: transform 0.28s ease, margin-bottom 0.28s ease;
+}
+
+.loan-card--education p {
+  max-height: none;
+  opacity: 1;
+  margin: 0 0 12px;
+  overflow: visible;
+  transform: translateY(0);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.loan-card--education button {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  margin-top: 0;
+  max-height: none;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  overflow: visible;
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+}
+
+.loan-card--education button:hover {
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.36);
+}
+
+.loan-card--education:hover h3,
+.loan-card--education:focus-within h3 {
+  margin-bottom: 8px;
+  transform: translateY(-2px);
+}
+
+.loan-card--education:hover p,
+.loan-card--education:focus-within p {
+  transform: translateY(-2px);
+}
+
+.loan-card--education:hover button,
+.loan-card--education:focus-within button {
+  transform: translateY(-2px);
+}
+
+.loan-card--education:hover,
+.loan-card--education:focus-within {
+  border-color: #93c5fd;
+}
+
+.loan-card--education:hover::after,
+.loan-card--education:focus-within::after {
+  transform: translateY(4%);
+}
+
+.loan-card--education:hover::before,
+.loan-card--education:focus-within::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(191, 219, 254, 0.45) 62%, rgba(147, 197, 253, 0.65));
+}
+
+@media (hover: none) {
+  .loan-card--education h3 {
+    margin-bottom: 10px;
+  }
+
+  .loan-card--education p {
+    max-height: 80px;
+    opacity: 1;
+    margin: 8px 0 12px;
+    transform: translateY(0);
+  }
+
+  .loan-card--education button {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    max-height: 52px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}
+
+.loan-card h3 {
+  margin: 0 0 8px 0;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.loan-card p {
+  font-size: 14px;
+  color: #475569;
+  margin: 0 0 18px 0;
+}
+
+.loan-card button {
+  margin-top: auto;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+}
+
+.loan-card button:hover {
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.3);
+}
+
+@media (max-width: 1100px) {

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wallet-service
+  namespace: pycrest
+spec:
+  type: ClusterIP
+  selector:
+    app: wallet-service
+  ports:
+    - port: 8000
+      targetPort: 8000

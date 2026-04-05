@@ -1,0 +1,89 @@
+/* Legacy-to-token migration layer for admin/manager/verification pages */
+
+.verification-page .card,
+.customer-page .card,
+.admin-page .card {
+  border-radius: var(--ds-radius-lg);
+  border: 1px solid var(--ds-border);
+  background: #fff;
+  box-shadow: var(--ds-shadow-2);
+}
+
+.verification-page .btn,
+.customer-page .btn,
+.admin-page .btn,
+.manager-page .btn {
+  min-height: var(--ds-btn-h);
+  border-radius: var(--ds-radius-md);
+}
+
+.verification-page,
+.customer-page,
+.admin-page,
+.manager-page {
+  font-family: var(--ds-font-family);
+}
+
+.verification-page button,
+.customer-page button,
+.admin-page button,
+.manager-page button {
+  min-height: var(--ds-btn-h);
+  font-family: var(--ds-font-family);
+}
+
+.verification-page input,
+.verification-page select,
+.verification-page textarea,
+.customer-page input,
+.customer-page select,
+.customer-page textarea {
+  min-height: var(--ds-input-h);
+  border-radius: var(--ds-radius-md);
+}
+
+/* Responsive table replacement */
+@media (max-width: 760px) {
+  .verification-page .table {
+    display: block;
+    width: 100%;
+    border: 0;
+  }
+
+  .verification-page .table thead {
+    display: none;
+  }
+
+  .verification-page .table tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .verification-page .table tr {
+    display: grid;
+    gap: 6px;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-md);
+    background: #fff;
+    padding: 10px;
+  }
+
+  .verification-page .table td {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 8px;
+    white-space: normal !important;
+    border-bottom: 0;
+    padding: 0 !important;
+    font-size: 13px;
+  }
+
+  .verification-page .table td::before {
+    content: attr(data-label);
+    color: var(--ds-text-muted);
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+}

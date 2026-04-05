@@ -1,0 +1,35 @@
+namespace: pycrest
+
+image:
+  repository: chillmadiguys/wallet-service
+  tag: v1.1.0
+  pullPolicy: Always
+
+replicaCount: 2
+minReadySeconds: 10
+
+service:
+  port: 8000
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  cpuThreshold: 70
+  memoryThreshold: 85
+
+serviceAccount:
+  name: wallet-service-sa
+
+
+configMapName: pycrest-global-config
+secretName: pycrest-global-secret
+pvcName: pycrest-uploads-pvc

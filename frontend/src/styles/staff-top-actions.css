@@ -1,0 +1,53 @@
+.staff-top-actions {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  z-index: 90;
+}
+
+.app-shell.with-sidebar {
+  position: relative;
+}
+
+.with-sidebar .staff-top-actions {
+  right: 18px;
+}
+
+.staff-signout {
+  border: 1px solid rgba(37, 99, 235, 0.36);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  border-radius: 10px;
+  min-height: var(--ds-btn-h);
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
+  backdrop-filter: blur(8px);
+}
+
+.staff-signout:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.16);
+}
+
+@media (max-width: 900px) {
+  .staff-top-actions {
+    top: 10px;
+    right: 12px;
+  }
+
+  .staff-signout {
+    min-height: var(--ds-btn-h);
+    padding: 10px 14px;
+    font-size: 13px;
+    border-radius: 9px;
+  }
+}
+
+/* Keep sign-out hidden while document preview modal is open. */
+body:has(.doc-modal) .staff-top-actions {
+  display: none;
+}

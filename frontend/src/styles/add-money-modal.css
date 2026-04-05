@@ -1,0 +1,64 @@
+@import url("./add-money-modal/layout.css");
+@import url("./add-money-modal/form.css");
+@import url("./add-money-modal/actions.css");
+@import url("./add-money-modal/motion-responsive.css");
+
+.wallet-modal__confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 1200;
+  padding: 16px;
+}
+
+.wallet-modal__confirm-card {
+  width: min(520px, 100%);
+  background: #ffffff;
+  border: 1px solid #dbe5f3;
+  border-radius: 16px;
+  box-shadow: 0 28px 60px rgba(15, 23, 42, 0.28);
+  padding: 18px 18px 16px;
+}
+
+.wallet-modal__confirm-card h4 {
+  margin: 0 0 10px;
+  color: #172554;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.wallet-modal__confirm-card p {
+  margin: 0;
+  color: #334155;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.wallet-modal__confirm-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.wallet-modal__confirm-btn {
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wallet-modal__confirm-btn--secondary {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.wallet-modal__confirm-btn--primary {
+  border: 1px solid #1d4ed8;
+  background: #1d4ed8;
+  color: #ffffff;
+}

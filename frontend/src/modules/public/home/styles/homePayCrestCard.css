@@ -1,0 +1,215 @@
+.paycrest-info-card {
+  width: calc(100% - 24px);
+  margin: 0 auto 40px;
+  padding: 0 0 40px;
+}
+
+.paycrest-info-area {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  min-height: 320px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(120deg, #1e3a8a, #3b82f6 45%, #38bdf8);
+  box-shadow: 0 22px 38px rgba(15, 23, 42, 0.18);
+}
+
+.paycrest-context {
+  position: relative;
+  z-index: 2;
+  padding: 38px 30px;
+  color: #fff;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.paycrest-context h2 {
+  margin: 0 0 16px;
+  font-size: clamp(28px, 3.6vw, 42px);
+  line-height: 1.1;
+}
+
+.paycrest-context p {
+  margin: 0 0 10px;
+  font-size: 16px;
+  line-height: 1.7;
+  max-width: none;
+}
+
+.paycrest-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  max-width: none;
+  width: 100%;
+}
+
+.paycrest-detail-card {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 14px 14px 12px;
+  backdrop-filter: blur(4px);
+}
+
+.paycrest-detail-card h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.paycrest-detail-card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  max-width: none;
+}
+
+.paycrest-info-area:hover {
+  transform: translateY(-4px);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 28px 46px rgba(15, 23, 42, 0.22);
+}
+
+.paycrest-circles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.paycrest-circles li {
+  position: absolute;
+  display: block;
+  list-style: none;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  animation: paycrestAnimate 25s linear infinite;
+  bottom: -150px;
+}
+
+.paycrest-circles li:nth-child(1) {
+  left: 25%;
+  width: 80px;
+  height: 80px;
+  animation-delay: 0s;
+}
+
+.paycrest-circles li:nth-child(2) {
+  left: 10%;
+  width: 20px;
+  height: 20px;
+  animation-delay: 2s;
+  animation-duration: 12s;
+}
+
+.paycrest-circles li:nth-child(3) {
+  left: 70%;
+  width: 20px;
+  height: 20px;
+  animation-delay: 4s;
+}
+
+.paycrest-circles li:nth-child(4) {
+  left: 40%;
+  width: 60px;
+  height: 60px;
+  animation-delay: 0s;
+  animation-duration: 18s;
+}
+
+.paycrest-circles li:nth-child(5) {
+  left: 65%;
+  width: 20px;
+  height: 20px;
+  animation-delay: 0s;
+}
+
+.paycrest-circles li:nth-child(6) {
+  left: 75%;
+  width: 110px;
+  height: 110px;
+  animation-delay: 3s;
+}
+
+.paycrest-circles li:nth-child(7) {
+  left: 35%;
+  width: 150px;
+  height: 150px;
+  animation-delay: 7s;
+}
+
+.paycrest-circles li:nth-child(8) {
+  left: 50%;
+  width: 25px;
+  height: 25px;
+  animation-delay: 15s;
+  animation-duration: 45s;
+}
+
+.paycrest-circles li:nth-child(9) {
+  left: 20%;
+  width: 15px;
+  height: 15px;
+  animation-delay: 2s;
+  animation-duration: 35s;
+}
+
+.paycrest-circles li:nth-child(10) {
+  left: 85%;
+  width: 150px;
+  height: 150px;
+  animation-delay: 0s;
+  animation-duration: 11s;
+}
+
+@keyframes paycrestAnimate {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+    border-radius: 0;
+  }
+
+  100% {
+    transform: translateY(-1000px) rotate(720deg);
+    opacity: 0;
+    border-radius: 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .paycrest-info-card {
+    width: calc(100% - 24px);
+    margin: 0 auto 30px;
+    padding: 0 0 30px;
+  }
+
+  .paycrest-info-area {
+    min-height: 290px;
+  }
+
+  .paycrest-context {
+    padding: 28px 20px;
+  }
+
+  .paycrest-context p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .paycrest-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .paycrest-detail-card h3 {
+    font-size: 16px;
+  }
+}
+
+

@@ -1,0 +1,103 @@
+.wallet-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease;
+}
+
+.wallet-modal__close:hover {
+  transform: translateY(-1px);
+  background: #ffffff;
+  border-color: rgba(100, 116, 139, 0.45);
+}
+
+.wallet-modal__close:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.wallet-modal__close:focus-visible {
+  outline: 3px solid rgba(47, 107, 255, 0.26);
+  outline-offset: 1px;
+}
+
+.wallet-modal__hint {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px 16px 4px;
+}
+
+.wallet-modal__hint > div {
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.wallet-modal__hint span {
+  display: block;
+  color: #64748b;
+  font-size: 0.76rem;
+  margin-bottom: 4px;
+}
+
+.wallet-modal__hint strong {
+  display: block;
+  color: #0f172a;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.wallet-modal__hint-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.wallet-modal__message {
+  margin: 12px 16px 0;
+}
+
+.wallet-modal__amount-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px 10px;
+}
+
+.wallet-modal__amount {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(147, 197, 253, 0.48);
+  background: rgba(255, 255, 255, 0.86);
+  padding: 11px 12px;
+  transition: box-shadow 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.wallet-modal__amount:focus-within {
+  border-color: rgba(47, 107, 255, 0.72);
+  box-shadow: 0 0 0 4px rgba(47, 107, 255, 0.16), 0 10px 24px rgba(47, 107, 255, 0.14);
+  animation: wallet-focus-glow 320ms ease-out;
+}
+
+.wallet-modal__currency {
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.wallet-modal__amount-input {
+  border: 0;
+  outline: 0;
+  width: 100%;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}

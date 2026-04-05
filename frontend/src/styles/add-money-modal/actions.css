@@ -1,0 +1,96 @@
+.wallet-modal__amount-input {
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+  background: transparent;
+}
+
+.wallet-modal__amount-input::placeholder {
+  color: rgba(15, 23, 42, 0.32);
+  font-weight: 600;
+}
+
+.wallet-modal__cta {
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #2f6bff 0%, #3f8cff 100%);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 10px 22px rgba(47, 107, 255, 0.35);
+  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+}
+
+.wallet-modal__cta--debit {
+  background: linear-gradient(135deg, #2f6bff 0%, #3f8cff 100%);
+  box-shadow: 0 10px 22px rgba(47, 107, 255, 0.35);
+}
+
+.wallet-modal__cta:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 14px 24px rgba(47, 107, 255, 0.38);
+}
+
+.wallet-modal__cta:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+  transform: none;
+  box-shadow: none;
+}
+
+.wallet-modal__cashfree-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 16px 10px;
+  padding: 8px 12px;
+  border: 1px solid rgba(147, 197, 253, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  color: #1e3a8a;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.wallet-modal__cashfree-lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(47, 107, 255, 0.16);
+  font-size: 0.72rem;
+}
+
+.wallet-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px 16px;
+}
+
+.wallet-modal__secondary {
+  border-radius: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(255, 255, 255, 0.88);
+  color: #1f2937;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease;
+}
+
+.wallet-modal__secondary:hover {
+  transform: translateY(-1px);
+  background: #ffffff;
+  border-color: rgba(100, 116, 139, 0.52);
+}
+
+.wallet-modal__secondary:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+}
+

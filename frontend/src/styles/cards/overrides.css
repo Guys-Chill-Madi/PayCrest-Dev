@@ -1,0 +1,182 @@
+  .loan-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .loan-grid {
+    grid-template-columns: 1fr;
+    padding: 0 16px 28px;
+  }
+}
+
+.why-section {
+  padding: 24px 24px 60px;
+  text-align: center;
+}
+
+.why-section h2 {
+  margin: 0 0 10px 0;
+  color: #0f172a;
+  font-size: 30px;
+}
+
+.why-subtitle {
+  margin: 0 0 28px 0;
+  color: #475569;
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.why-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+  text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.why-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(37, 99, 235, 0.16);
+}
+
+.why-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  min-width: 64px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  color: #1d4ed8;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+
+.why-card h3 {
+  margin: 0 0 8px 0;
+  color: #0f172a;
+}
+
+.why-card p {
+  margin: 0;
+  color: #475569;
+  font-size: 14px;
+}
+
+@media (max-width: 1100px) {
+  .why-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .why-section {
+    padding: 16px 16px 40px;
+  }
+
+  .why-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Disable all loan-card hover effects */
+.loan-card,
+.loan-card--vehicle,
+.loan-card--personal,
+.loan-card--home,
+.loan-card--education,
+.loan-card button {
+  transition: none !important;
+  animation: none !important;
+}
+
+.loan-card:hover,
+.loan-card--vehicle:hover,
+.loan-card--personal:hover,
+.loan-card--home:hover,
+.loan-card--education:hover,
+.loan-card:focus-within,
+.loan-card--vehicle:focus-within,
+.loan-card--personal:focus-within,
+.loan-card--home:focus-within,
+.loan-card--education:focus-within {
+  transform: none !important;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08) !important;
+  border-color: inherit !important;
+}
+
+.loan-card--vehicle:hover::after,
+.loan-card--vehicle:focus-within::after,
+.loan-card--personal:hover::after,
+.loan-card--personal:focus-within::after,
+.loan-card--home:hover::after,
+.loan-card--home:focus-within::after,
+.loan-card--education:hover::after,
+.loan-card--education:focus-within::after {
+  transform: translateY(8%) !important;
+}
+
+.loan-card--vehicle:hover::before,
+.loan-card--vehicle:focus-within::before,
+.loan-card--personal:hover::before,
+.loan-card--personal:focus-within::before,
+.loan-card--home:hover::before,
+.loan-card--home:focus-within::before,
+.loan-card--education:hover::before,
+.loan-card--education:focus-within::before {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(219, 234, 254, 0.52) 72%,
+    rgba(191, 219, 254, 0.72)
+  ) !important;
+}
+
+.loan-card--vehicle:hover h3,
+.loan-card--vehicle:hover p,
+.loan-card--vehicle:hover button,
+.loan-card--personal:hover h3,
+.loan-card--personal:hover p,
+.loan-card--personal:hover button,
+.loan-card--home:hover h3,
+.loan-card--home:hover p,
+.loan-card--home:hover button,
+.loan-card--education:hover h3,
+.loan-card--education:hover p,
+.loan-card--education:hover button {
+  transform: none !important;
+}
+
+/* Remove button hover glow on product cards */
+.loan-card--vehicle button:hover,
+.loan-card--personal button:hover,
+.loan-card--home button:hover,
+.loan-card--education button:hover,
+.loan-card button:hover {
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3) !important;
+  transform: none !important;
+}
+
+/* Ensure hover doesn't change borders or gradients */
+.loan-card--vehicle:hover::before,
+.loan-card--personal:hover::before,
+.loan-card--home:hover::before,
+.loan-card--education:hover::before {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(219, 234, 254, 0.52) 72%,
+    rgba(191, 219, 254, 0.72)
+  ) !important;
+}

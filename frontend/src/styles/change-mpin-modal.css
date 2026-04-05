@@ -1,0 +1,249 @@
+.change-mpin-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(16, 33, 61, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+.change-mpin-modal__panel {
+  width: min(620px, 100%);
+  max-height: min(86vh, 820px);
+  overflow: auto;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(217, 229, 246, 0.9);
+  border-radius: 18px;
+  box-shadow: 0 22px 70px rgba(2, 6, 23, 0.35);
+  padding: 20px;
+}
+
+.change-mpin-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.change-mpin-modal__title {
+  margin: 0;
+  color: #10213d;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.change-mpin-modal__sub {
+  margin: 8px 0 0;
+  color: #5a6b86;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.change-mpin-modal__close {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  background: rgba(255, 255, 255, 0.85);
+  color: #0f172a;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 12px 26px rgba(2, 6, 23, 0.14);
+  transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.change-mpin-modal__close:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(15, 23, 42, 0.28);
+  box-shadow: 0 16px 34px rgba(2, 6, 23, 0.18);
+}
+
+.change-mpin-modal__close:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
+  box-shadow: none;
+}
+
+.change-mpin-modal__close:focus-visible {
+  outline: 3px solid rgba(31, 95, 191, 0.35);
+  outline-offset: 2px;
+}
+
+.change-mpin-modal__tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0 16px;
+}
+
+.change-mpin-modal__tab {
+  border: 1px solid rgba(183, 201, 227, 0.95);
+  background: rgba(255, 255, 255, 0.9);
+  color: #174a95;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background-color 140ms ease;
+}
+
+.change-mpin-modal__tab:hover {
+  transform: translateY(-1px);
+  border-color: rgba(137, 168, 211, 1);
+  box-shadow: 0 10px 18px rgba(16, 33, 61, 0.12);
+}
+
+.change-mpin-modal__tab.is-active {
+  background: linear-gradient(135deg, #1f5fbf 0%, #174a95 100%);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.change-mpin-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.change-mpin-modal__field {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.change-mpin-modal__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: #10213d;
+}
+
+.change-mpin-modal__input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(219, 229, 242, 1);
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.change-mpin-modal__input[disabled],
+.change-mpin-modal__input[aria-disabled="true"] {
+  background: #f8fafc;
+  color: rgba(15, 23, 42, 0.72);
+}
+
+.change-mpin-modal__input:focus {
+  outline: none;
+  border-color: rgba(31, 95, 191, 0.6);
+  box-shadow: 0 0 0 4px rgba(31, 95, 191, 0.12);
+}
+
+.change-mpin-modal__digits-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.change-mpin-modal__digit {
+  width: 52px;
+  height: 52px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  border-radius: 14px;
+  border: 1px solid rgba(219, 229, 242, 1);
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 10px 22px rgba(16, 33, 61, 0.06);
+}
+
+.change-mpin-modal__digit:focus {
+  outline: none;
+  border-color: rgba(31, 95, 191, 0.65);
+  box-shadow: 0 0 0 4px rgba(31, 95, 191, 0.12);
+}
+
+.change-mpin-modal__toggle {
+  height: 38px;
+  border-radius: 14px;
+  border: 1px solid rgba(183, 201, 227, 0.95);
+  background: rgba(255, 255, 255, 0.95);
+  color: #10213d;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 0 14px;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background-color 140ms ease;
+}
+
+.change-mpin-modal__toggle:hover {
+  transform: translateY(-1px);
+  border-color: rgba(137, 168, 211, 1);
+  box-shadow: 0 10px 18px rgba(16, 33, 61, 0.12);
+}
+
+.change-mpin-modal__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.change-mpin-modal__btn {
+  border-radius: 14px;
+  padding: 10px 16px;
+  border: 1px solid rgba(183, 201, 227, 0.95);
+  background: rgba(255, 255, 255, 0.95);
+  color: #10213d;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background-color 140ms ease;
+}
+
+.change-mpin-modal__btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(137, 168, 211, 1);
+  box-shadow: 0 12px 22px rgba(16, 33, 61, 0.14);
+}
+
+.change-mpin-modal__btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
+  box-shadow: none;
+}
+
+.change-mpin-modal__btn--primary {
+  border: 0;
+  background: linear-gradient(135deg, #1f5fbf 0%, #174a95 100%);
+  color: #ffffff;
+  box-shadow: 0 14px 26px rgba(31, 95, 191, 0.26);
+}
+
+.change-mpin-modal__btn--primary:hover {
+  box-shadow: 0 18px 32px rgba(16, 33, 61, 0.28);
+}
+
+@media (max-width: 520px) {
+  .change-mpin-modal__panel {
+    padding: 18px 16px;
+  }
+
+  .change-mpin-modal__digit {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+  }
+}

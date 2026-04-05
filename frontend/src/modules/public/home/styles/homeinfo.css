@@ -1,0 +1,145 @@
+﻿.homeinfo-page {
+  min-height: 100vh;
+  background: transparent;
+  padding: 60px 80px;
+  color: #000000;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+.homeinfo-page .edu-content,
+.homeinfo-page .edu-title,
+.homeinfo-page .edu-calculator {
+  position: relative;
+  z-index: 1;
+}
+
+.homeinfo-page .edu-title {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 40px;
+}
+
+.homeinfo-page .edu-content {
+  display: flex;
+  gap: 80px;
+  align-items: flex-start;
+}
+
+.homeinfo-page .edu-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 200px;
+}
+
+.homeinfo-page .edu-menu-item {
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  padding-left: 16px;
+  position: relative;
+  color: #000;
+}
+
+.homeinfo-page .edu-menu-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background-color: transparent;
+}
+
+.homeinfo-page .edu-menu-item.active::before {
+  background-color: #2563eb;
+}
+
+.homeinfo-page .edu-details {
+  max-width: 700px;
+}
+
+.homeinfo-page .edu-details h2 {
+  font-size: 26px;
+  margin-bottom: 20px;
+}
+
+.homeinfo-page .edu-details ul {
+  list-style: none;
+  padding: 0;
+}
+
+.homeinfo-page .edu-details li {
+  font-size: 18px;
+  margin-bottom: 14px;
+  padding-left: 28px;
+  position: relative;
+}
+
+.homeinfo-page .edu-details li::before {
+  content: "\2713";
+  position: absolute;
+  left: 0;
+  color: #2563eb;
+  font-weight: bold;
+}
+
+.homeinfo-page .edu-calculator {
+  margin-top: 80px;
+  display: flex;
+  justify-content: center;
+}
+
+.homeinfo-page .edu-menu-item {
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.homeinfo-page .edu-menu-item:hover {
+  color: #1d4ed8;
+  transform: translateX(4px);
+}
+
+.homeinfo-page .edu-details {
+  animation: homeinfo-content-in 0.45s ease both;
+}
+
+@keyframes homeinfo-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1024px) {
+  .homeinfo-page {
+    padding: 40px 28px;
+  }
+
+  .homeinfo-page .edu-content {
+    gap: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .homeinfo-page {
+    padding: 28px 16px;
+  }
+
+  .homeinfo-page .edu-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .homeinfo-page .edu-menu {
+    min-width: 0;
+    width: 100%;
+    gap: 14px;
+  }
+}
+

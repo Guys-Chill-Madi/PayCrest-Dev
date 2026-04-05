@@ -1,0 +1,12 @@
+{
+  "Auth Service": 89663,
+  "Loan Service": 89682,
+  "EMI Service": 89698,
+  "Wallet Service": 89716,
+  "Payment Service": 89732,
+  "Verification Service": 89748,
+  "Admin Service": 89766,
+  "Manager Service": 89782,
+  "API Gateway": 89788,
+  "Frontend": 89791
+}

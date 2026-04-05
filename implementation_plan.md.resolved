@@ -1,0 +1,81 @@
+# Paycrest LMS - Monolith to Microservices Migration Plan
+
+## Phase 0: Deep Analysis and Dependency Matrix
+
+### Dependency Matrix
+
+| Module | Depends On | Shared Collections | Shared Schemas |
+|--------|------------|--------------------|----------------|
+| **Auth** | Manager, Admin for roles | `users` | `UserSchema`, `TokenSchema` |
+| **Loan (Customer)** | Verification, Auth, Wallet | `loans`, `users`, `noc` | `LoanSchema`, `ApplicationSchema` |
+| **EMI** | Loan | `loans`, `emis`, `penalties` | `EMISchema` |
+| **Wallet** | Auth | `wallets`, `transactions` | `WalletSchema`, `TransactionSchema` |
+| **Payments** | Wallet | `wallets`, `transactions` | `PaymentSchema` |
+| **Verification** | Loan, Auth | `users`, `kyc_documents` | `KYCSchema`, `DocumentSchema` |
+| **Admin** | Auth, Loan, Verification | `users`, `audit`, `support`, `settings` | `StaffSchema`, `SettingsSchema`, `AuditSchema` |
+| **Manager** | Loan, Verification | `loans`, `noc` | `SanctionSchema`, `ManagerActionSchema` |
+| **Transactions** | Wallet | `transactions` | `TransactionSchema` |
+
+### Proposed Service Split
+
+Based on the tight coupling observed, I propose the following boundaries. Note that `transactions` are heavily coupled with `wallet` and thus merged into `wallet-service`. `customer` operations primary map to `loan-service`, with authentication mapped to `auth-service`.
+
+#### SERVICE: auth-service
+  **Port:** 3001
+  **Contains backend modules:** `routers/auth.py`, `services/auth_service.py`
+  **Owns MongoDB collections:** `users` (write access)
+  **Exposes API routes:** `/api/auth/*`
+  **Communicates with:** None directly (other services will validate JWTs independently, but fetch user profiles via HTTP where needed).
+
+#### SERVICE: loan-service
+  **Port:** 3002
+  **Contains backend modules:** `modules/customer/`, `services/loan/`, `services/customer_service.py`, `services/document_service.py`
+  **Owns MongoDB collections:** `loans`, `noc`
+  **Exposes API routes:** `/api/loans/*`, `/api/customer/*`
+  **Communicates with:** `auth-service`, `verification-service`, `wallet-service`
+
+#### SERVICE: emi-service
+  **Port:** 3003
+  **Contains backend modules:** `services/emi/`, `modules/admin/emi`
+  **Owns MongoDB collections:** `emis`, `penalties`, `schedules`
+  **Exposes API routes:** `/api/emi/*`
+  **Communicates with:** `loan-service`, `wallet-service`
+
+#### SERVICE: wallet-service
+  **Port:** 3004
+  **Contains backend modules:** `modules/wallet/`, `modules/transactions/`, `services/wallet/`, `services/transaction_service.py`, `services/wallet_service.py`
+  **Owns MongoDB collections:** `wallets`, `transactions`
+  **Exposes API routes:** `/api/wallet/*`, `/api/transactions/*`
+  **Communicates with:** `auth-service`
+
+#### SERVICE: payment-service
+  **Port:** 3005
+  **Contains backend modules:** `modules/payments/`, `services/cashfree_service.py` (replaced with MOCK)
+  **Owns MongoDB collections:** Modifies `wallets` and `transactions` via mock (mock handles it directly, but ideally in a real environment it calls `wallet-service`. For DevOps training mock purposes per guidelines, it updates MongoDB directly).
+  **Exposes API routes:** `/api/payments/*`
+  **Communicates with:** None (standalone mock).
+
+#### SERVICE: verification-service
+  **Port:** 3006
+  **Contains backend modules:** `modules/verification/`, `services/verification_service.py`, `services/kyc_service.py`
+  **Owns MongoDB collections:** `kyc_documents`, `verifications`
+  **Exposes API routes:** `/api/verification/*`
+  **Communicates with:** `auth-service`
+
+#### SERVICE: admin-service
+  **Port:** 3007
+  **Contains backend modules:** `modules/admin/` (except emi), `services/admin_service.py`, `services/audit_service.py`, `services/settings_service.py`
+  **Owns MongoDB collections:** `audit`, `support`, `settings`, `staff`
+  **Exposes API routes:** `/api/admin/*`, `/api/support/*`
+  **Communicates with:** `auth-service`, `loan-service`
+
+#### SERVICE: manager-service
+  **Port:** 3008
+  **Contains backend modules:** `modules/manager/`, `services/manager_service.py`, `services/sanction_service.py`
+  **Owns MongoDB collections:** `sanction_letters`
+  **Exposes API routes:** `/api/manager/*`
+  **Communicates with:** `loan-service`, `verification-service`
+
+## User Review Required
+> [!IMPORTANT]
+> Please review the Dependency Matrix and the Proposed Service Split above. The `transactions` module is merged into `wallet-service` due to high cohesion, and no separate `notification-service` is scoped as it's typically tied to EMI or Loan services. Let me know if you approve this plan to proceed with Phase 1.
