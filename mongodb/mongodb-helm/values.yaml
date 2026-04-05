@@ -1,0 +1,20 @@
+namespace: pycrest
+
+image:
+  repository: mongo
+  tag: "7.0"
+
+service:
+  port: 27017
+
+storage:
+  size: 10Gi
+  className: nfs-csi   
+
+auth:
+  rootUser: pycrest
+  rootPassword: pycrest123
+  database: pycrest
+
+serviceAccount:
+  name: mongodb-sa

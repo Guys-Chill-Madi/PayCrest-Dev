@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loan-service
+  namespace: pycrest
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: loan-service
+  template:
+    metadata:
+      labels:
+        app: loan-service
+    spec:
+      serviceAccountName: loan-service-sa
+
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: loan-service
+                topologyKey: kubernetes.io/hostname
+
+      containers:
+        - name: loan-service
+          image: chillmadiguys/loan-service:v1.1.0
+          ports:
+            - containerPort: 8000
+
+          envFrom:
+            - configMapRef:
+                name: pycrest-global-config
+            - secretRef:
+                name: pycrest-global-secret
+
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+
+          resources:
+            requests:
+              cpu: 200m
+              memory: 384Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: pycrest-uploads-pvcs
