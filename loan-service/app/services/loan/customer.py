@@ -39,14 +39,37 @@ def _sanitize_loan_doc(doc: dict) -> dict:
 
 # ── Shared loan lookup ────────────────────────────────────────
 async def _find_loan_collection(loan_id: str, customer_id: str | int) -> str:
-    """Find which collection this loan belongs to. Raises 404 if not found."""
+    """Find which collection this loan belongs to. Raises 404 if not found.
+    Tries both int and str variants of customer_id to handle type mismatches
+    between services (payment-service sends str, loans stored with int).
+    """
     db = await get_db()
-    filt = loan_id_filter(loan_id)
-    filt["customer_id"] = customer_id
+    base_filt = loan_id_filter(loan_id)
+
+    # Build customer_id variants — loans may be stored with int or str customer_id
+    cid_variants = []
+    try:
+        cid_variants.append(int(customer_id))
+    except (ValueError, TypeError):
+        pass
+    cid_variants.append(str(customer_id))
+    # deduplicate preserving order
+    seen = []
+    for v in cid_variants:
+        if v not in seen:
+            seen.append(v)
+    cid_variants = seen
+
     for col in ("personal_loans", "vehicle_loans", "education_loans", "home_loans"):
-        if await db[col].find_one(filt, projection={"_id": 1}):
-            return col
-    raise HTTPException(status_code=404, detail=f"Loan {loan_id} not found for customer")
+        for cid in cid_variants:
+            filt = {**base_filt, "customer_id": cid}
+            if await db[col].find_one(filt, projection={"_id": 1}):
+                return col
+
+    raise HTTPException(
+        status_code=404,
+        detail=f"Loan {loan_id} not found for customer",
+    )
 
 
 # =========================
@@ -72,8 +95,11 @@ async def pay_emi(loan_collection: str, loan_id: str, customer_id: str):
 
     emi = float(loan["emi_per_month"])
     next_emi_doc = await db.emi_schedules.find_one(
-        {"loan_id": loan.get("loan_id"), "customer_id": customer_id,
-         "status": {"$in": ["pending", "overdue"]}},
+        {
+            "loan_id": loan.get("loan_id"),
+            "customer_id": customer_id,
+            "status": {"$in": ["pending", "overdue"]},
+        },
         sort=[("due_date", 1)],
     )
     penalty_amount = float(next_emi_doc.get("penalty_amount") or 0) if next_emi_doc else 0.0
@@ -83,38 +109,45 @@ async def pay_emi(loan_collection: str, loan_id: str, customer_id: str):
         raise HTTPException(status_code=400, detail="Insufficient balance")
 
     new_balance = acc["balance"] - total_due
-    await db.bank_accounts.update_one({"_id": acc["_id"]}, {"$set": {"balance": new_balance}})
+    await db.bank_accounts.update_one(
+        {"_id": acc["_id"]}, {"$set": {"balance": new_balance}}
+    )
 
     txn_id = await next_transaction_id()
-    await db.transactions.insert_one({
-        "_id": txn_id,
-        "transaction_id": txn_id,
-        "customer_id": customer_id,
-        "loan_id": loan.get("loan_id"),
-        "type": "emi_payment",
-        "amount": total_due,
-        "balance_after": new_balance,
-        "created_at": datetime.utcnow(),
-    })
+    await db.transactions.insert_one(
+        {
+            "_id": txn_id,
+            "transaction_id": txn_id,
+            "customer_id": customer_id,
+            "loan_id": loan.get("loan_id"),
+            "type": "emi_payment",
+            "amount": total_due,
+            "balance_after": new_balance,
+            "created_at": datetime.utcnow(),
+        }
+    )
 
     remaining_tenure = loan["remaining_tenure"] - 1
     remaining_amount = max(0.0, round(float(loan["remaining_amount"]) - emi, 2))
 
     await db[loan_collection].update_one(
         filt,
-        {"$set": {
-            "remaining_tenure": remaining_tenure,
-            "remaining_amount": remaining_amount,
-            "status": LoanStatus.COMPLETED if remaining_tenure <= 0 else LoanStatus.ACTIVE,
-            "next_emi_date": next_month_date(),
-            "total_paid": float(loan.get("total_paid") or 0) + total_due,
-            "penalties_paid_total": float(loan.get("penalties_paid_total") or 0) + penalty_amount,
-        }}
+        {
+            "$set": {
+                "remaining_tenure": remaining_tenure,
+                "remaining_amount": remaining_amount,
+                "status": LoanStatus.COMPLETED if remaining_tenure <= 0 else LoanStatus.ACTIVE,
+                "next_emi_date": next_month_date(),
+                "total_paid": float(loan.get("total_paid") or 0) + total_due,
+                "penalties_paid_total": float(loan.get("penalties_paid_total") or 0) + penalty_amount,
+            }
+        },
     )
 
     try:
         await pay_next_installment(
-            loan.get("loan_id"), customer_id,
+            loan.get("loan_id"),
+            customer_id,
             paid_total_amount=total_due,
             paid_emi_amount=emi,
             paid_penalty_amount=penalty_amount,
@@ -123,8 +156,11 @@ async def pay_emi(loan_collection: str, loan_id: str, customer_id: str):
         pass
 
     await write_audit_log(
-        action="emi_payment", actor_role="customer", actor_id=customer_id,
-        entity_type="loan", entity_id=loan.get("loan_id"),
+        action="emi_payment",
+        actor_role="customer",
+        actor_id=customer_id,
+        entity_type="loan",
+        entity_id=loan.get("loan_id"),
         details={
             "loan_collection": loan_collection,
             "emi_amount": emi,
@@ -144,10 +180,31 @@ async def pay_emi(loan_collection: str, loan_id: str, customer_id: str):
 async def pay_emi_wallet(loan_collection: str, loan_id: str, customer_id: str | int):
     """Pay the next EMI using the internal wallet balance."""
     db = await get_db()
-    filt = loan_id_filter(loan_id)
-    filt["customer_id"] = customer_id
 
-    loan = await db[loan_collection].find_one(filt)
+    # Build customer_id variants for lookup
+    cid_variants = []
+    try:
+        cid_variants.append(int(customer_id))
+    except (ValueError, TypeError):
+        pass
+    cid_variants.append(str(customer_id))
+    seen = []
+    for v in cid_variants:
+        if v not in seen:
+            seen.append(v)
+    cid_variants = seen
+
+    # Find loan trying both int and str customer_id
+    base_filt = loan_id_filter(loan_id)
+    loan = None
+    matched_cid = None
+    for cid in cid_variants:
+        filt = {**base_filt, "customer_id": cid}
+        loan = await db[loan_collection].find_one(filt)
+        if loan:
+            matched_cid = cid
+            break
+
     if not loan or loan.get("status") != LoanStatus.ACTIVE:
         raise HTTPException(status_code=400, detail="Loan not active")
 
@@ -161,8 +218,11 @@ async def pay_emi_wallet(loan_collection: str, loan_id: str, customer_id: str | 
         raise HTTPException(status_code=400, detail="Invalid emi_per_month on loan")
 
     next_emi_doc = await db.emi_schedules.find_one(
-        {"loan_id": loan.get("loan_id"), "customer_id": customer_id,
-         "status": {"$in": ["pending", "overdue"]}},
+        {
+            "loan_id": loan.get("loan_id"),
+            "customer_id": matched_cid,
+            "status": {"$in": ["pending", "overdue"]},
+        },
         sort=[("due_date", 1)],
     )
     penalty_amount = float(next_emi_doc.get("penalty_amount") or 0) if next_emi_doc else 0.0
@@ -179,21 +239,25 @@ async def pay_emi_wallet(loan_collection: str, loan_id: str, customer_id: str | 
     # Never go negative on last EMI due to floating point rounding
     remaining_amount = max(0.0, round(float(loan.get("remaining_amount") or 0) - emi, 2))
 
+    update_filt = {**base_filt, "customer_id": matched_cid}
     await db[loan_collection].update_one(
-        filt,
-        {"$set": {
-            "remaining_tenure": remaining_tenure,
-            "remaining_amount": remaining_amount,
-            "status": LoanStatus.COMPLETED if remaining_tenure <= 0 else LoanStatus.ACTIVE,
-            "next_emi_date": next_month_date(),
-            "total_paid": float(loan.get("total_paid") or 0) + total_due,
-            "penalties_paid_total": float(loan.get("penalties_paid_total") or 0) + penalty_amount,
-        }},
+        update_filt,
+        {
+            "$set": {
+                "remaining_tenure": remaining_tenure,
+                "remaining_amount": remaining_amount,
+                "status": LoanStatus.COMPLETED if remaining_tenure <= 0 else LoanStatus.ACTIVE,
+                "next_emi_date": next_month_date(),
+                "total_paid": float(loan.get("total_paid") or 0) + total_due,
+                "penalties_paid_total": float(loan.get("penalties_paid_total") or 0) + penalty_amount,
+            }
+        },
     )
 
     try:
         await pay_next_installment(
-            loan.get("loan_id"), customer_id,
+            loan.get("loan_id"),
+            matched_cid,
             paid_total_amount=total_due,
             paid_emi_amount=emi,
             paid_penalty_amount=penalty_amount,
@@ -202,8 +266,11 @@ async def pay_emi_wallet(loan_collection: str, loan_id: str, customer_id: str | 
         pass
 
     await write_audit_log(
-        action="emi_payment_wallet", actor_role="customer", actor_id=customer_id,
-        entity_type="loan", entity_id=loan.get("loan_id"),
+        action="emi_payment_wallet",
+        actor_role="customer",
+        actor_id=customer_id,
+        entity_type="loan",
+        entity_id=loan.get("loan_id"),
         details={
             "loan_collection": loan_collection,
             "emi_amount": emi,
@@ -230,10 +297,29 @@ async def pay_emi_gateway(
 ):
     """Apply EMI payment collected via a payment gateway. Does NOT debit wallet."""
     db = await get_db()
-    filt = loan_id_filter(loan_id)
-    filt["customer_id"] = customer_id
 
-    loan = await db[loan_collection].find_one(filt)
+    cid_variants = []
+    try:
+        cid_variants.append(int(customer_id))
+    except (ValueError, TypeError):
+        pass
+    cid_variants.append(str(customer_id))
+    seen = []
+    for v in cid_variants:
+        if v not in seen:
+            seen.append(v)
+    cid_variants = seen
+
+    base_filt = loan_id_filter(loan_id)
+    loan = None
+    matched_cid = None
+    for cid in cid_variants:
+        filt = {**base_filt, "customer_id": cid}
+        loan = await db[loan_collection].find_one(filt)
+        if loan:
+            matched_cid = cid
+            break
+
     if not loan or loan.get("status") != LoanStatus.ACTIVE:
         raise HTTPException(status_code=400, detail="Loan not active")
 
@@ -247,8 +333,11 @@ async def pay_emi_gateway(
         raise HTTPException(status_code=400, detail="Invalid EMI amount")
 
     next_emi_doc = await db.emi_schedules.find_one(
-        {"loan_id": loan.get("loan_id"), "customer_id": customer_id,
-         "status": {"$in": ["pending", "overdue"]}},
+        {
+            "loan_id": loan.get("loan_id"),
+            "customer_id": matched_cid,
+            "status": {"$in": ["pending", "overdue"]},
+        },
         sort=[("due_date", 1)],
     )
     penalty_amount = float(next_emi_doc.get("penalty_amount") or 0) if next_emi_doc else 0.0
@@ -264,36 +353,42 @@ async def pay_emi_gateway(
         )
 
     txn_id = await next_transaction_id()
-    await db.transactions.insert_one({
-        "_id": txn_id,
-        "transaction_id": txn_id,
-        "customer_id": customer_id,
-        "loan_id": loan.get("loan_id"),
-        "type": "emi_payment_gateway",
-        "amount": expected_total,
-        "gateway": gateway,
-        "gateway_order_id": gateway_order_id,
-        "created_at": datetime.utcnow(),
-    })
+    await db.transactions.insert_one(
+        {
+            "_id": txn_id,
+            "transaction_id": txn_id,
+            "customer_id": customer_id,
+            "loan_id": loan.get("loan_id"),
+            "type": "emi_payment_gateway",
+            "amount": expected_total,
+            "gateway": gateway,
+            "gateway_order_id": gateway_order_id,
+            "created_at": datetime.utcnow(),
+        }
+    )
 
     remaining_tenure = int(loan.get("remaining_tenure") or 0) - 1
     remaining_amount = max(0.0, round(float(loan.get("remaining_amount") or 0) - emi, 2))
 
+    update_filt = {**base_filt, "customer_id": matched_cid}
     await db[loan_collection].update_one(
-        filt,
-        {"$set": {
-            "remaining_tenure": remaining_tenure,
-            "remaining_amount": remaining_amount,
-            "status": LoanStatus.COMPLETED if remaining_tenure <= 0 else LoanStatus.ACTIVE,
-            "next_emi_date": next_month_date(),
-            "total_paid": float(loan.get("total_paid") or 0) + expected_total,
-            "penalties_paid_total": float(loan.get("penalties_paid_total") or 0) + penalty_amount,
-        }},
+        update_filt,
+        {
+            "$set": {
+                "remaining_tenure": remaining_tenure,
+                "remaining_amount": remaining_amount,
+                "status": LoanStatus.COMPLETED if remaining_tenure <= 0 else LoanStatus.ACTIVE,
+                "next_emi_date": next_month_date(),
+                "total_paid": float(loan.get("total_paid") or 0) + expected_total,
+                "penalties_paid_total": float(loan.get("penalties_paid_total") or 0) + penalty_amount,
+            }
+        },
     )
 
     try:
         await pay_next_installment(
-            loan.get("loan_id"), customer_id,
+            loan.get("loan_id"),
+            matched_cid,
             paid_total_amount=expected_total,
             paid_emi_amount=emi,
             paid_penalty_amount=penalty_amount,
@@ -302,8 +397,11 @@ async def pay_emi_gateway(
         pass
 
     await write_audit_log(
-        action="emi_payment_gateway", actor_role="customer", actor_id=customer_id,
-        entity_type="loan", entity_id=loan.get("loan_id"),
+        action="emi_payment_gateway",
+        actor_role="customer",
+        actor_id=customer_id,
+        entity_type="loan",
+        entity_id=loan.get("loan_id"),
         details={
             "loan_collection": loan_collection,
             "emi_amount": emi,
@@ -324,7 +422,6 @@ async def pay_emi_gateway(
 async def list_customer_loans(customer_id: str):
     db = await get_db()
 
-    # Fetch from all loan types — use both int and str customer_id for safety
     cid_variants = [customer_id]
     try:
         cid_variants.append(int(customer_id))
@@ -334,7 +431,7 @@ async def list_customer_loans(customer_id: str):
         cid_variants.append(str(customer_id))
     except Exception:
         pass
-    cid_variants = list(dict.fromkeys(cid_variants))  # deduplicate preserving order
+    cid_variants = list(dict.fromkeys(cid_variants))
 
     filt = {"customer_id": {"$in": cid_variants}} if len(cid_variants) > 1 else {"customer_id": customer_id}
 
@@ -358,17 +455,25 @@ async def list_customer_loans(customer_id: str):
         try:
             now = datetime.utcnow()
             next_due = await db.emi_schedules.find_one(
-                {"loan_id": loan_id, "customer_id": cust_id,
-                 "status": {"$in": ["pending", "overdue"]}},
+                {
+                    "loan_id": loan_id,
+                    "customer_id": cust_id,
+                    "status": {"$in": ["pending", "overdue"]},
+                },
                 sort=[("due_date", 1)],
             )
             last_paid = await db.emi_schedules.find_one(
-                {"loan_id": loan_id, "customer_id": cust_id,
-                 "status": "paid", "paid_at": {"$ne": None}},
+                {
+                    "loan_id": loan_id,
+                    "customer_id": cust_id,
+                    "status": "paid",
+                    "paid_at": {"$ne": None},
+                },
                 sort=[("paid_at", -1)],
             )
             overdue_match = {
-                "loan_id": loan_id, "customer_id": cust_id,
+                "loan_id": loan_id,
+                "customer_id": cust_id,
                 "$or": [
                     {"status": "overdue"},
                     {"status": "pending", "due_date": {"$lt": now}},
@@ -377,12 +482,24 @@ async def list_customer_loans(customer_id: str):
             overdue_count = await db.emi_schedules.count_documents(overdue_match)
             overdue_amount = 0.0
             try:
-                agg = await db.emi_schedules.aggregate([
-                    {"$match": overdue_match},
-                    {"$group": {"_id": None, "total_due": {"$sum": {
-                        "$add": [{"$ifNull": ["$emi_amount", 0]}, {"$ifNull": ["$penalty_amount", 0]}]
-                    }}}},
-                ]).to_list(length=1)
+                agg = await db.emi_schedules.aggregate(
+                    [
+                        {"$match": overdue_match},
+                        {
+                            "$group": {
+                                "_id": None,
+                                "total_due": {
+                                    "$sum": {
+                                        "$add": [
+                                            {"$ifNull": ["$emi_amount", 0]},
+                                            {"$ifNull": ["$penalty_amount", 0]},
+                                        ]
+                                    }
+                                },
+                            }
+                        },
+                    ]
+                ).to_list(length=1)
                 if agg:
                     overdue_amount = float(agg[0].get("total_due") or 0)
             except Exception:
@@ -405,15 +522,33 @@ async def list_customer_loans(customer_id: str):
 
 async def get_customer_emi_details(loan_id: str, customer_id: str | int) -> dict:
     db = await get_db()
-    filt = loan_id_filter(loan_id)
-    filt["customer_id"] = customer_id
 
+    cid_variants = []
+    try:
+        cid_variants.append(int(customer_id))
+    except (ValueError, TypeError):
+        pass
+    cid_variants.append(str(customer_id))
+    seen = []
+    for v in cid_variants:
+        if v not in seen:
+            seen.append(v)
+    cid_variants = seen
+
+    base_filt = loan_id_filter(loan_id)
     loan = None
     loan_collection = None
+    matched_cid = None
+
     for col in ("personal_loans", "vehicle_loans", "education_loans", "home_loans"):
-        loan = await db[col].find_one(filt)
+        for cid in cid_variants:
+            filt = {**base_filt, "customer_id": cid}
+            loan = await db[col].find_one(filt)
+            if loan:
+                loan_collection = col
+                matched_cid = cid
+                break
         if loan:
-            loan_collection = col
             break
 
     if not loan:
@@ -423,8 +558,11 @@ async def get_customer_emi_details(loan_id: str, customer_id: str | int) -> dict
     if str(loan.get("status") or "").lower() == LoanStatus.FORECLOSED:
         paid_at = loan.get("foreclosed_at") or datetime.utcnow()
         await db.emi_schedules.update_many(
-            {"loan_id": loan.get("loan_id"), "customer_id": customer_id,
-             "status": {"$in": ["pending", "overdue"]}},
+            {
+                "loan_id": loan.get("loan_id"),
+                "customer_id": matched_cid,
+                "status": {"$in": ["pending", "overdue"]},
+            },
             {"$set": {"status": "paid", "paid_at": paid_at, "updated_at": datetime.utcnow()}},
         )
 
@@ -438,20 +576,32 @@ async def get_customer_emi_details(loan_id: str, customer_id: str | int) -> dict
 
     upcoming = (
         await db.emi_schedules.find(
-            {"loan_id": loan_numeric_id, "customer_id": customer_id,
-             "status": {"$in": ["pending", "overdue"]}}
-        ).sort("due_date", 1).to_list(length=500)
+            {
+                "loan_id": loan_numeric_id,
+                "customer_id": matched_cid,
+                "status": {"$in": ["pending", "overdue"]},
+            }
+        )
+        .sort("due_date", 1)
+        .to_list(length=500)
     )
     history = (
         await db.emi_schedules.find(
-            {"loan_id": loan_numeric_id, "customer_id": customer_id, "status": "paid"}
-        ).sort("paid_at", -1).to_list(length=500)
+            {
+                "loan_id": loan_numeric_id,
+                "customer_id": matched_cid,
+                "status": "paid",
+            }
+        )
+        .sort("paid_at", -1)
+        .to_list(length=500)
     )
 
     next_due = upcoming[0].get("due_date") if upcoming else loan.get("next_emi_date")
 
     overdue_match = {
-        "loan_id": loan_numeric_id, "customer_id": customer_id,
+        "loan_id": loan_numeric_id,
+        "customer_id": matched_cid,
         "$or": [
             {"status": "overdue"},
             {"status": "pending", "due_date": {"$lt": now}},
@@ -461,12 +611,24 @@ async def get_customer_emi_details(loan_id: str, customer_id: str | int) -> dict
     overdue_amount = 0.0
     try:
         overdue_count = int(await db.emi_schedules.count_documents(overdue_match))
-        agg = await db.emi_schedules.aggregate([
-            {"$match": overdue_match},
-            {"$group": {"_id": None, "total_due": {"$sum": {
-                "$add": [{"$ifNull": ["$emi_amount", 0]}, {"$ifNull": ["$penalty_amount", 0]}]
-            }}}},
-        ]).to_list(length=1)
+        agg = await db.emi_schedules.aggregate(
+            [
+                {"$match": overdue_match},
+                {
+                    "$group": {
+                        "_id": None,
+                        "total_due": {
+                            "$sum": {
+                                "$add": [
+                                    {"$ifNull": ["$emi_amount", 0]},
+                                    {"$ifNull": ["$penalty_amount", 0]},
+                                ]
+                            }
+                        },
+                    }
+                },
+            ]
+        ).to_list(length=1)
         if agg:
             overdue_amount = float(agg[0].get("total_due") or 0)
     except Exception:
@@ -487,24 +649,26 @@ async def get_customer_emi_details(loan_id: str, customer_id: str | int) -> dict
             "status": e.get("status"),
         }
 
-    return normalize_doc({
-        "loan_id": loan_numeric_id,
-        "loan_collection": loan_collection,
-        "next_due_date": next_due,
-        "overdue_count": overdue_count,
-        "overdue_amount": round(overdue_amount, 2),
-        "upcoming": [_to_row(e) for e in upcoming],
-        "history": [
-            {
-                "installment_no": e.get("installment_no"),
-                "due_date": e.get("due_date"),
-                "paid_at": e.get("paid_at"),
-                "paid_amount": e.get("paid_amount"),
-                "status": e.get("status"),
-            }
-            for e in history
-        ],
-    })
+    return normalize_doc(
+        {
+            "loan_id": loan_numeric_id,
+            "loan_collection": loan_collection,
+            "next_due_date": next_due,
+            "overdue_count": overdue_count,
+            "overdue_amount": round(overdue_amount, 2),
+            "upcoming": [_to_row(e) for e in upcoming],
+            "history": [
+                {
+                    "installment_no": e.get("installment_no"),
+                    "due_date": e.get("due_date"),
+                    "paid_at": e.get("paid_at"),
+                    "paid_amount": e.get("paid_amount"),
+                    "status": e.get("status"),
+                }
+                for e in history
+            ],
+        }
+    )
 
 
 # =========================
@@ -532,7 +696,9 @@ async def pay_emi_any_gateway(
 ):
     col = await _find_loan_collection(loan_id, customer_id)
     await pay_emi_gateway(
-        col, loan_id, customer_id,
+        col,
+        loan_id,
+        customer_id,
         paid_total_amount=paid_total_amount,
         gateway=gateway,
         gateway_order_id=gateway_order_id,
