@@ -1,44 +1,5 @@
 version: "3.9"
 
-# ================================================================
-# PayCrest – docker-compose for LOCAL TESTING
-#
-# HOW TO USE:
-#   1. Place this file at the ROOT of your project (see structure below)
-#   2. Run: docker compose up --build
-#   3. Frontend → http://localhost
-#   4. API      → http://localhost:3000/api
-#
-# REQUIRED PROJECT STRUCTURE:
-#   paycrest/                  ← project root (place docker-compose.yaml here)
-#   ├── docker-compose.yaml
-#   ├── frontend/
-#   │   ├── Dockerfile
-#   │   ├── nginx.conf
-#   │   ├── package.json
-#   │   └── src/
-#   ├── api-gateway/
-#   │   ├── Dockerfile
-#   │   ├── package.json
-#   │   └── server.js
-#   ├── auth-service/
-#   │   ├── Dockerfile
-#   │   ├── requirements.txt
-#   │   └── app/
-#   ├── loan-service/          ← same pattern for all Python services
-#   │   ├── Dockerfile
-#   │   ├── requirements.txt
-#   │   └── app/
-#   ... (emi, wallet, payment, verification, admin, manager)
-#
-# PORT CLARITY:
-#   - Python services listen on container port 8000 (uvicorn)
-#   - The PORT env var (3001-3008) is ONLY used by the API gateway
-#     to know which URL to call. It does NOT change what uvicorn binds to.
-#   - In Docker Compose, services talk by container name:
-#     e.g. http://auth-service:8000  (NOT :3001)
-#   - The api-gateway overrides *_SERVICE_URL to use :8000 directly
-# ================================================================
 
 networks:
   paycrest-net:
