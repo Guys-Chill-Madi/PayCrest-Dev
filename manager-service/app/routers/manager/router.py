@@ -128,6 +128,41 @@ async def download_signed_sanction_letter_for_manager(
         headers={"Content-Disposition": f'inline; filename="signed_sanction_{loan_id}.pdf"'},
     )
 
+@router.get("/loans/{loan_id}/documents/{doc_type}")
+async def download_loan_document_for_manager(
+    loan_id: str,
+    doc_type: str,
+    user=Depends(require_roles(Roles.MANAGER)),
+):
+    loan_collection, loan = await find_loan_any(loan_id)
+    if not loan_collection or not loan:
+        raise HTTPException(status_code=404, detail="Loan not found")
+
+    # Map doc_type → loan field
+    field_map = {
+        "pay_slip": "pay_slip",
+        "aadhar_card": "aadhar_card",
+        "pan_card": "pan_card",
+        "photo": "photo",
+    }
+
+    field = field_map.get(doc_type)
+    if not field:
+        raise HTTPException(status_code=400, detail="Unsupported document type")
+
+    raw_value = loan.get(field)
+    if not raw_value:
+        raise HTTPException(status_code=404, detail="Document not uploaded")
+
+    doc = await get_document_binary(str(raw_value))
+
+    return StreamingResponse(
+        io.BytesIO(doc["data"]),
+        media_type=doc["content_type"],
+        headers={
+            "Content-Disposition": f'inline; filename="{doc.get("filename", "document")}"'
+        },
+    )
 
 @router.post("/loans/{loan_id}/forward-to-admin")
 async def forward_to_admin_route(
