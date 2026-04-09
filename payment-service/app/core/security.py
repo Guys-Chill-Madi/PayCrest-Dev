@@ -1,19 +1,17 @@
-
 import time
 from datetime import datetime, timedelta
 from typing import Optional
+
 import bcrypt
-from jose import jwt
-from fastapi import HTTPException, Depends
+from jose import jwt, JWTError
+from fastapi import HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
+
 from ..core.config import settings
 from ..database.mongo import get_db
 from bson import ObjectId
 from ..utils.id import to_object_id
-from fastapi import HTTPException, Depends, Request
 
-# OAuth2 scheme points to /auth/token endpoint
-# username field in the form will be treated as email
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_PREFIX}/auth/token")
 
 
@@ -30,30 +28,25 @@ def verify_password(password: str, hashed: str) -> bool:
 
 
 def create_access_token(subject: dict, expires_minutes: int | None = None) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=expires_minutes or settings.JWT_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + timedelta(
+        minutes=expires_minutes or settings.JWT_EXPIRE_MINUTES
+    )
     payload = {**subject, "exp": expire}
-    token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
-    return token
+    return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
 async def get_current_user(
     request: Request,
     token: str = Depends(oauth2_scheme),
 ):
-    from fastapi import Request  # already imported at top of file
     db = await get_db()
 
-    # ── Path 1: Request came through API Gateway ──────────────
-    # Gateway already validated the JWT and injected X-User-Id
-    x_user_id   = request.headers.get("x-user-id")
+    x_user_id  = request.headers.get("x-user-id")
     x_user_role = request.headers.get("x-user-role")
     x_internal  = request.headers.get("x-internal-token")
 
-    # Reject requests that bypassed gateway AND have no valid token
-    # (services are not directly reachable in k8s, but extra safety)
-
+    # Fast path — request came through API Gateway
     if x_user_id and x_internal == settings.INTERNAL_SERVICE_TOKEN:
-        # Fast path — trust the gateway
         user = None
         target_is_customer = x_user_role == "customer"
         primary  = db.users       if target_is_customer else db.staff_users
@@ -73,9 +66,11 @@ async def get_current_user(
             raise HTTPException(status_code=401, detail="User inactive or not found")
         return user
 
-    # ── Path 2: Direct access (dev/curl) — decode JWT ─────────
+    # Fallback — direct access, decode JWT
     try:
-        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+        payload = jwt.decode(
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+        )
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
@@ -106,8 +101,10 @@ async def get_current_user(
 
 
 def require_roles(*allowed_roles: str):
-    async def dep(user = Depends(get_current_user)):
+    async def dep(user=Depends(get_current_user)):
         if user.get("role") not in allowed_roles:
-            raise HTTPException(status_code=403, detail="Not authorized for this operation")
+            raise HTTPException(
+                status_code=403, detail="Not authorized for this operation"
+            )
         return user
     return dep

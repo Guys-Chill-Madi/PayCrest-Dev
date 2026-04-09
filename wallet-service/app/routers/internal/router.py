@@ -1,234 +1,143 @@
-"""
-services/wallet-service/app/routers/internal/router.py
+from fastapi import APIRouter, Depends
+from ...core.security import require_roles
+from ...models.enums import Roles
+from ...schemas.wallet import (
+    MPINSetupRequest,
+    MPINVerifyRequest,
+    MPINResetRequest,
+    MPINResetWithPasswordRequest,
+    AddMoneyRequest,
+)
+from .service import (
+    get_wallet_balance,
+    credit_wallet,
+    debit_wallet,
+    get_transaction_history,
+    setup_mpin,
+    verify_mpin,
+    reset_mpin,
+    reset_mpin_with_password,
+    get_mpin_status,
+)
+from ...utils.serializers import normalize_doc
 
-Internal endpoints called by other microservices directly.
-Protected by X-Internal-Token header only — NO OAuth2/JWT.
-"""
-from datetime import datetime
-from typing import Optional
-
-from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel
-
-from ...core.config import settings
-from ...database.mongo import get_db
-
-router = APIRouter(prefix="/internal", tags=["internal"])
-
-
-# ── Helpers ───────────────────────────────────────────────────
-def _try_int(value):
-    try:
-        return int(value)
-    except (ValueError, TypeError):
-        return None
-
-
-def _check_token(x_internal_token: str):
-    if x_internal_token != settings.INTERNAL_SERVICE_TOKEN:
-        raise HTTPException(status_code=403, detail="Invalid internal token")
+router = APIRouter(prefix="", tags=["wallet"])
 
 
-async def _get_account(db, customer_id):
-    """Find bank account by customer_id (try int and str)."""
-    cid_int = _try_int(customer_id)
-    for cid in ([cid_int] if cid_int is not None else []) + [str(customer_id)]:
-        acc = await db.bank_accounts.find_one({"customer_id": cid})
-        if acc:
-            return acc
-    return None
+@router.get("/balance")
+async def get_balance(user=Depends(require_roles(Roles.CUSTOMER))):
+    """Get current wallet balance for logged-in customer."""
+    wallet = await get_wallet_balance(user["_id"])
+    return {
+        "balance": wallet.get("balance", 0),
+        "total_credited": wallet.get("total_credited", 0),
+        "total_debited": wallet.get("total_debited", 0),
+        "transaction_count": wallet.get("transaction_count", 0),
+        "last_updated": wallet.get("updated_at"),
+    }
 
 
-async def _next_txn_id(db) -> int:
-    last = await db.transactions.find_one({}, sort=[("_id", -1)])
-    try:
-        return int(last.get("_id") or 0) + 1 if last else 1
-    except Exception:
-        return 1
-
-
-# ── Schemas ───────────────────────────────────────────────────
-class CreditPayload(BaseModel):
-    customer_id: str
-    amount: float
-    description: str = "Wallet credit"
-    reference_id: Optional[str] = None
-
-
-class DebitPayload(BaseModel):
-    customer_id: str
-    amount: float
-    description: str = "Wallet debit"
-    reference_id: Optional[str] = None
-
-
-class MpinVerifyPayload(BaseModel):
-    customer_id: str
-    mpin: str
-
-
-# ── Endpoints ─────────────────────────────────────────────────
-@router.post("/credit")
-async def credit_wallet(
-    payload: CreditPayload,
-    x_internal_token: str = Header(..., alias="X-Internal-Token"),
-):
-    """Credit a customer's wallet. Called by payment-service."""
-    _check_token(x_internal_token)
-    db = await get_db()
-    now = datetime.utcnow()
-    amt = float(payload.amount)
-    cid_int = _try_int(payload.customer_id)
-    cid_str = str(payload.customer_id)
-    candidates = ([cid_int] if cid_int is not None else []) + [cid_str]
-
-    # Update bank_accounts
-    updated = False
-    for cid in candidates:
-        result = await db.bank_accounts.update_one(
-            {"customer_id": cid},
-            {"$inc": {"balance": amt}, "$set": {"updated_at": now}},
-        )
-        if result.matched_count > 0:
-            updated = True
-            break
-
-    if not updated:
-        new_id = cid_int if cid_int is not None else cid_str
-        await db.bank_accounts.insert_one({
-            "customer_id": new_id,
-            "balance": amt,
-            "created_at": now,
-            "updated_at": now,
-        })
-
-    # Update wallets (keep both stores in sync)
-    wallet_updated = False
-    for cid in candidates:
-        result = await db.wallets.update_one(
-            {"customer_id": cid},
-            {"$inc": {"balance": amt}, "$set": {"updated_at": now}},
-        )
-        if result.matched_count > 0:
-            wallet_updated = True
-            break
-
-    if not wallet_updated:
-        new_id = cid_int if cid_int is not None else cid_str
-        await db.wallets.insert_one({
-            "customer_id": new_id,
-            "balance": amt,
-            "total_credited": amt,
-            "total_debited": 0.0,
-            "transaction_count": 1,
-            "created_at": now,
-            "updated_at": now,
-        })
-
-    tid = await _next_txn_id(db)
-    await db.transactions.insert_one({
-        "_id": tid,
-        "transaction_id": tid,
-        "customer_id": payload.customer_id,
-        "type": "credit",
-        "amount": amt,
-        "description": payload.description,
-        "reference_id": payload.reference_id,
-        "created_at": now,
-    })
-
-    acc = await _get_account(db, payload.customer_id)
-    new_balance = float((acc or {}).get("balance", 0))
-
+@router.post("/add-money")
+async def add_money(payload: AddMoneyRequest, user=Depends(require_roles(Roles.CUSTOMER))):
+    """Add money to wallet with M-PIN verification."""
+    await verify_mpin(user["_id"], payload.mpin)
+    transaction = await credit_wallet(user["_id"], payload.amount, payload.description)
     return {
         "success": True,
-        "customer_id": payload.customer_id,
-        "amount_credited": amt,
-        "new_balance": new_balance,
-        "transaction_id": tid,
+        "message": f"Successfully added ₹{payload.amount} to your wallet",
+        "transaction_id": transaction.get("transaction_id"),
+        "new_balance": transaction.get("new_balance"),
     }
 
 
 @router.post("/debit")
-async def debit_wallet(
-    payload: DebitPayload,
-    x_internal_token: str = Header(..., alias="X-Internal-Token"),
-):
-    """Debit a customer's wallet. Called by loan-service for EMI/foreclosure payments."""
-    _check_token(x_internal_token)
-    db = await get_db()
-    now = datetime.utcnow()
-    amt = float(payload.amount)
-
-    acc = await _get_account(db, payload.customer_id)
-    if not acc:
-        raise HTTPException(status_code=404, detail="Account not found")
-
-    current_balance = float(acc.get("balance", 0))
-    if current_balance < amt:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Insufficient balance. Available: {current_balance}, Required: {amt}",
-        )
-
-    new_balance = current_balance - amt
-    await db.bank_accounts.update_one(
-        {"_id": acc["_id"]},
-        {"$set": {"balance": new_balance, "updated_at": now}},
-    )
-
-    # Keep wallets in sync
-    cid_int = _try_int(payload.customer_id)
-    for cid in ([cid_int] if cid_int is not None else []) + [str(payload.customer_id)]:
-        await db.wallets.update_one(
-            {"customer_id": cid},
-            {"$inc": {"balance": -amt}, "$set": {"updated_at": now}},
-        )
-
-    tid = await _next_txn_id(db)
-    await db.transactions.insert_one({
-        "_id": tid,
-        "transaction_id": tid,
-        "customer_id": payload.customer_id,
-        "type": "debit",
-        "amount": amt,
-        "balance_after": new_balance,
-        "description": payload.description,
-        "reference_id": payload.reference_id,
-        "created_at": now,
-    })
-
+async def debit_money(payload: AddMoneyRequest, user=Depends(require_roles(Roles.CUSTOMER))):
+    """Customer-initiated debit (withdraw from wallet) with M-PIN verification."""
+    await verify_mpin(user["_id"], payload.mpin)
+    transaction = await debit_wallet(user["_id"], payload.amount, payload.description)
     return {
         "success": True,
-        "customer_id": payload.customer_id,
-        "amount_debited": amt,
-        "new_balance": new_balance,
-        "transaction_id": tid,
+        "message": f"Debited ₹{payload.amount} from your wallet",
+        "transaction_id": transaction.get("transaction_id"),
+        "new_balance": transaction.get("new_balance"),
     }
 
 
-@router.get("/balance/{customer_id}")
-async def get_balance(
-    customer_id: str,
-    x_internal_token: str = Header(..., alias="X-Internal-Token"),
+@router.get("/transactions")
+async def get_transactions(
+    page: int = 1,
+    limit: int = 20,
+    user=Depends(require_roles(Roles.CUSTOMER)),
 ):
-    """Get wallet balance. Called by payment-service and emi-service."""
-    _check_token(x_internal_token)
-    db = await get_db()
-    acc = await _get_account(db, customer_id)
+    """Get transaction history for customer."""
+    return await get_transaction_history(user["_id"], page, limit)
+
+
+@router.post("/mpin/setup")
+async def setup_mpin_endpoint(
+    payload: MPINSetupRequest,
+    user=Depends(require_roles(Roles.CUSTOMER)),
+):
+    """Set up M-PIN for customer (one-time, after account creation)."""
+    return await setup_mpin(user["_id"], payload.mpin, payload.confirm_mpin)
+
+
+@router.post("/mpin/verify")
+async def verify_mpin_endpoint(
+    payload: MPINVerifyRequest,
+    user=Depends(require_roles(Roles.CUSTOMER)),
+):
+    """Verify M-PIN (used before accessing dashboard)."""
+    return await verify_mpin(user["_id"], payload.mpin)
+
+
+@router.get("/mpin/status")
+async def mpin_status_endpoint(user=Depends(require_roles(Roles.CUSTOMER))):
+    """Get whether M-PIN is configured for current customer."""
+    return await get_mpin_status(user["_id"])
+
+
+@router.put("/mpin/reset")
+async def reset_mpin_endpoint(
+    payload: MPINResetRequest,
+    user=Depends(require_roles(Roles.CUSTOMER)),
+):
+    """Reset M-PIN."""
+    return await reset_mpin(
+        user["_id"],
+        payload.old_mpin,
+        payload.new_mpin,
+        payload.confirm_mpin,
+    )
+
+
+@router.put("/mpin/reset/password")
+async def reset_mpin_password_endpoint(
+    payload: MPINResetWithPasswordRequest,
+    user=Depends(require_roles(Roles.CUSTOMER)),
+):
+    """Reset M-PIN after verifying account password."""
+    return await reset_mpin_with_password(
+        user["_id"],
+        payload.password,
+        payload.new_mpin,
+        payload.confirm_mpin,
+    )
+
+
+@router.get("/admin/customer/{customer_id}/balance")
+async def get_customer_balance(
+    customer_id: str | int,
+    user=Depends(require_roles(Roles.ADMIN, Roles.MANAGER)),
+):
+    """Get wallet balance for specific customer (admin/manager view)."""
+    wallet = await get_wallet_balance(customer_id)
     return {
         "customer_id": customer_id,
-        "balance": float((acc or {}).get("balance", 0)),
+        "balance": wallet.get("balance", 0),
+        "total_credited": wallet.get("total_credited", 0),
+        "total_debited": wallet.get("total_debited", 0),
+        "transaction_count": wallet.get("transaction_count", 0),
+        "created_at": wallet.get("created_at"),
+        "updated_at": wallet.get("updated_at"),
     }
-
-
-@router.post("/verify-mpin")
-async def verify_mpin_internal(
-    payload: MpinVerifyPayload,
-    x_internal_token: str = Header(..., alias="X-Internal-Token"),
-):
-    """Verify customer MPIN. Called by payment-service before processing payments."""
-    _check_token(x_internal_token)
-    from ...services.wallet.mpin import verify_mpin as _verify_mpin
-    result = await _verify_mpin(payload.customer_id, payload.mpin)
-    return result

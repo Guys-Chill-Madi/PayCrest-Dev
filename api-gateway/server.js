@@ -7,6 +7,11 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
+
+// Trust the first proxy (HAProxy / nginx / k8s ingress)
+// Required for express-rate-limit to work correctly behind a reverse proxy
+app.set('trust proxy', 1);
+
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
 const INTERNAL_SERVICE_TOKEN = process.env.INTERNAL_SERVICE_TOKEN;
@@ -107,16 +112,13 @@ function makeProxy(pathPrefix, targetUrl) {
 
     on: {
       proxyReq: (proxyReq, req) => {
-        // Always inject internal token so services can verify the request came from gateway
         proxyReq.setHeader('X-Internal-Token', INTERNAL_SERVICE_TOKEN || '');
 
-        // Forward validated user identity — services use this instead of re-decoding JWT
         if (req.user) {
-          proxyReq.setHeader('X-User-Id',   String(req.user.user_id || ''));
-          proxyReq.setHeader('X-User-Role',  String(req.user.role   || ''));
+          proxyReq.setHeader('X-User-Id',  String(req.user.user_id || ''));
+          proxyReq.setHeader('X-User-Role', String(req.user.role   || ''));
         }
 
-        // Still forward Authorization header for services that fall back to JWT (dev access)
         if (req.headers.authorization) {
           proxyReq.setHeader('Authorization', req.headers.authorization);
         }
@@ -146,7 +148,6 @@ const routes = {
   '/api/manager':      process.env.MANAGER_SERVICE_URL,
 };
 
-// Stricter rate limit on auth routes
 app.use('/api/auth', authLimiter);
 
 for (const [prefix, url] of Object.entries(routes)) {

@@ -3,7 +3,7 @@ import time
 from datetime import datetime, timedelta
 from typing import Optional
 import bcrypt
-from jose import jwt
+from jose import jwt, JWTError
 from fastapi import HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from ..core.config import settings
