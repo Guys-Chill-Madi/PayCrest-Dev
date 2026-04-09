@@ -72,9 +72,19 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 
-def require_roles(*allowed_roles: str):
+def require_roles(*allowed_roles):
     async def dep(user = Depends(get_current_user)):
-        if user.get("role") not in allowed_roles:
+        user_role = str(user.get("role")).lower()
+
+        normalized_roles = []
+        for role in allowed_roles:
+            if hasattr(role, "value"):  # Enum case
+                normalized_roles.append(str(role.value).lower())
+            else:
+                normalized_roles.append(str(role).lower())
+
+        if user_role not in normalized_roles:
             raise HTTPException(status_code=403, detail="Not authorized for this operation")
+
         return user
     return dep
