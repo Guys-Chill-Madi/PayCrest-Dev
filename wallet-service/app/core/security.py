@@ -9,7 +9,9 @@ from ..core.config import settings
 from ..database.mongo import get_db
 from bson import ObjectId
 from ..utils.id import to_object_id
-
+from fastapi import Header
+from typing import Optional
+from fastapi import HTTPException, Depends, Request
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_PREFIX}/auth/token")
 
 
@@ -33,23 +35,57 @@ def create_access_token(subject: dict, expires_minutes: int | None = None) -> st
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(
+    request: Request,
+    token: str = Depends(oauth2_scheme),
+):
+    from fastapi import Request  # already imported at top of file
+    db = await get_db()
+
+    # ── Path 1: Request came through API Gateway ──────────────
+    # Gateway already validated the JWT and injected X-User-Id
+    x_user_id   = request.headers.get("x-user-id")
+    x_user_role = request.headers.get("x-user-role")
+    x_internal  = request.headers.get("x-internal-token")
+
+    # Reject requests that bypassed gateway AND have no valid token
+    # (services are not directly reachable in k8s, but extra safety)
+
+    if x_user_id and x_internal == settings.INTERNAL_SERVICE_TOKEN:
+        # Fast path — trust the gateway
+        user = None
+        target_is_customer = x_user_role == "customer"
+        primary  = db.users       if target_is_customer else db.staff_users
+        fallback = db.staff_users if target_is_customer else db.users
+        try:
+            uid = int(x_user_id)
+            user = await primary.find_one({"_id": uid})
+            if not user:
+                user = await fallback.find_one({"_id": uid})
+        except Exception:
+            oid = to_object_id(x_user_id)
+            user = await primary.find_one({"_id": oid})
+            if not user:
+                user = await fallback.find_one({"_id": oid})
+
+        if not user or not user.get("is_active", True):
+            raise HTTPException(status_code=401, detail="User inactive or not found")
+        return user
+
+    # ── Path 2: Direct access (dev/curl) — decode JWT ─────────
     try:
-        payload = jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     user_id = payload.get("user_id")
-    role = payload.get("role")
+    role    = payload.get("role")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token payload")
 
-    db = await get_db()
     user = None
     target_is_customer = role == "customer"
-    primary = db.users if target_is_customer else db.staff_users
+    primary  = db.users       if target_is_customer else db.staff_users
     fallback = db.staff_users if target_is_customer else db.users
 
     try:
@@ -76,3 +112,19 @@ def require_roles(*allowed_roles: str):
             )
         return user
     return dep
+
+async def internal_or_user_auth(
+    request: Request,
+    x_internal_token: Optional[str] = Header(default=None),
+):
+    # Case 1: internal service call — no JWT needed
+    if x_internal_token and x_internal_token == settings.INTERNAL_SERVICE_TOKEN:
+        return {"role": "internal_service"}
+
+    # Case 2: normal JWT auth — extract manually so we control the 401
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    token = auth_header.split(" ", 1)[1]
+    return await get_current_user(token)

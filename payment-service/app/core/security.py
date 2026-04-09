@@ -1,18 +1,17 @@
-
 import time
 from datetime import datetime, timedelta
 from typing import Optional
+
 import bcrypt
-from jose import jwt
-from fastapi import HTTPException, Depends
+from jose import jwt, JWTError
+from fastapi import HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
+
 from ..core.config import settings
 from ..database.mongo import get_db
 from bson import ObjectId
 from ..utils.id import to_object_id
 
-# OAuth2 scheme points to /auth/token endpoint
-# username field in the form will be treated as email
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_PREFIX}/auth/token")
 
 
@@ -29,29 +28,60 @@ def verify_password(password: str, hashed: str) -> bool:
 
 
 def create_access_token(subject: dict, expires_minutes: int | None = None) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=expires_minutes or settings.JWT_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + timedelta(
+        minutes=expires_minutes or settings.JWT_EXPIRE_MINUTES
+    )
     payload = {**subject, "exp": expire}
-    token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
-    return token
+    return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(
+    request: Request,
+    token: str = Depends(oauth2_scheme),
+):
+    db = await get_db()
+
+    x_user_id  = request.headers.get("x-user-id")
+    x_user_role = request.headers.get("x-user-role")
+    x_internal  = request.headers.get("x-internal-token")
+
+    # Fast path — request came through API Gateway
+    if x_user_id and x_internal == settings.INTERNAL_SERVICE_TOKEN:
+        user = None
+        target_is_customer = x_user_role == "customer"
+        primary  = db.users       if target_is_customer else db.staff_users
+        fallback = db.staff_users if target_is_customer else db.users
+        try:
+            uid = int(x_user_id)
+            user = await primary.find_one({"_id": uid})
+            if not user:
+                user = await fallback.find_one({"_id": uid})
+        except Exception:
+            oid = to_object_id(x_user_id)
+            user = await primary.find_one({"_id": oid})
+            if not user:
+                user = await fallback.find_one({"_id": oid})
+
+        if not user or not user.get("is_active", True):
+            raise HTTPException(status_code=401, detail="User inactive or not found")
+        return user
+
+    # Fallback — direct access, decode JWT
     try:
-        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        payload = jwt.decode(
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+        )
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     user_id = payload.get("user_id")
-    role = payload.get("role")
+    role    = payload.get("role")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token payload")
-    db = await get_db()
-    # support numeric user ids or ObjectId strings
+
     user = None
     target_is_customer = role == "customer"
-    primary = db.users if target_is_customer else db.staff_users
+    primary  = db.users       if target_is_customer else db.staff_users
     fallback = db.staff_users if target_is_customer else db.users
 
     try:
@@ -64,16 +94,17 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         user = await primary.find_one({"_id": oid})
         if not user:
             user = await fallback.find_one({"_id": oid})
+
     if not user or not user.get("is_active", True):
         raise HTTPException(status_code=401, detail="User inactive or not found")
-    # Note: Don't convert _id to string here - it causes lookup failures in services
-    # Services expect the original _id type (numeric or ObjectId)
     return user
 
 
 def require_roles(*allowed_roles: str):
-    async def dep(user = Depends(get_current_user)):
+    async def dep(user=Depends(get_current_user)):
         if user.get("role") not in allowed_roles:
-            raise HTTPException(status_code=403, detail="Not authorized for this operation")
+            raise HTTPException(
+                status_code=403, detail="Not authorized for this operation"
+            )
         return user
     return dep

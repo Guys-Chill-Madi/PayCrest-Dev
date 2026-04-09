@@ -45,22 +45,22 @@ LOAN_PRODUCT_CONFIG: dict[str, dict] = {
 
 @router.post('/add-money')
 async def add_money_route(amount: float, user=Depends(require_roles(Roles.CUSTOMER))):
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     return await add_money(cid, amount)
 
 @router.get('/get/profile')
 async def profile(user=Depends(require_roles(Roles.CUSTOMER))):
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     return await profile_dashboard(cid)
 
 @router.get('/kyc')
 async def customer_kyc(user=Depends(require_roles(Roles.CUSTOMER))):
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     return await get_kyc_by_customer(cid)
 
 @router.get("/notifications")
 async def customer_notifications(limit: int = 100, user=Depends(require_roles(Roles.CUSTOMER))):
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     return await list_customer_notifications(cid, limit=limit)
 
 
@@ -109,7 +109,7 @@ async def list_support_tickets(user=Depends(require_roles(Roles.CUSTOMER))):
 
 @router.get("/loan-offers")
 async def loan_offers(user=Depends(require_roles(Roles.CUSTOMER))):
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     eligibility = await compute_customer_eligibility(cid)
     settings = await get_settings()
 
@@ -178,7 +178,7 @@ async def submit_kyc_route(
     photo: UploadFile = File(None),
     user=Depends(require_roles(Roles.CUSTOMER)),
 ):
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
 
     payload = {
         "full_name": full_name,
@@ -237,7 +237,7 @@ async def apply_personal(
     user=Depends(require_roles(Roles.CUSTOMER)),
 ):
     settings = await get_settings()
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     
     payload = {
         "bank_account_number": bank_account_number,
@@ -279,7 +279,7 @@ async def apply_vehicle(
     user=Depends(require_roles(Roles.CUSTOMER)),
 ):
     settings = await get_settings()
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     
     payload = {
         "bank_account_number": bank_account_number,
@@ -336,7 +336,7 @@ async def apply_education(
     user=Depends(require_roles(Roles.CUSTOMER)),
 ):
     settings = await get_settings()
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
 
     payload = {
         "bank_account_number": bank_account_number,
@@ -393,7 +393,7 @@ async def apply_home(
     user=Depends(require_roles(Roles.CUSTOMER)),
 ):
     settings = await get_settings()
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
 
     payload = {
         "bank_account_number": bank_account_number,
@@ -427,35 +427,36 @@ async def apply_home(
 
 @router.get('/loans')
 async def customer_loans(user=Depends(require_roles(Roles.CUSTOMER))):
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     return await list_customer_loans(cid)
 
 @router.get("/loans/{loan_id}/emi-details")
 async def loan_emi_details(loan_id: str, user=Depends(require_roles(Roles.CUSTOMER))):
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     return await get_customer_emi_details(loan_id, cid)
 
 
 @router.post('/pay-emi/{loan_id}')
 async def pay_emi_by_id(loan_id: str, user=Depends(require_roles(Roles.CUSTOMER))):
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     return await pay_emi_any_wallet(loan_id, cid)
 
 
 @router.get('/loans/{loan_id}/settlement')
 async def get_settlement(loan_id: str, user=Depends(require_roles(Roles.CUSTOMER))):
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     return await calculate_settlement_any(loan_id, cid)
 
 
 @router.post('/loans/{loan_id}/foreclose')
 async def foreclose_loan_route(loan_id: str, user=Depends(require_roles(Roles.CUSTOMER))):
-    cid = user.get("customer_id") or user.get("_id")
+    print("USER OBJECT:", user)
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     return await foreclose_any(loan_id, cid)
 
 @router.get("/loans/{loan_id}/noc")
 async def download_loan_noc(loan_id: str, user=Depends(require_roles(Roles.CUSTOMER))):
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     noc = await get_customer_noc(loan_id, cid)
     document_id = noc.get("document_id")
     if not document_id:
@@ -470,7 +471,7 @@ async def download_loan_noc(loan_id: str, user=Depends(require_roles(Roles.CUSTO
 
 @router.get("/loans/{loan_id}/sanction-letter")
 async def download_sanction_letter(loan_id: str, user=Depends(require_roles(Roles.CUSTOMER))):
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     db = await get_db()
     from ...utils.id import loan_id_filter
 
@@ -509,7 +510,7 @@ async def upload_signed_sanction_letter_route(
     signed_sanction_letter: UploadFile = File(...),
     user=Depends(require_roles(Roles.CUSTOMER)),
 ):
-    cid = user.get("customer_id") or user.get("_id")
+    cid = user.get("customer_id") or user.get("_id") or user.get("user_id")
     doc_id = await upload_document(signed_sanction_letter, cid, "signed_sanction_letter")
     return await upload_signed_sanction_letter(loan_id, cid, doc_id)
 
