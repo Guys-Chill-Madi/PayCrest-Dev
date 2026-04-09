@@ -2,18 +2,28 @@
 services/loan-service/app/routers/loan/router.py
 
 Internal routes called by other microservices (not the frontend).
+Protected by X-Internal-Token header only.
 """
+from datetime import datetime
+
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
-from datetime import datetime
+
 from ...core.config import settings
 from ...database.mongo import get_db
 from ...models.enums import LoanStatus
 from ...utils.serializers import normalize_doc
+from ...services.loan.customer import pay_emi_any_wallet
 
 router = APIRouter(prefix="/internal", tags=["internal"])
 
 
+def _check_token(x_internal_token: str):
+    if x_internal_token != settings.INTERNAL_SERVICE_TOKEN:
+        raise HTTPException(status_code=403, detail="Invalid internal token")
+
+
+# ── Verification complete ─────────────────────────────────────
 class VerificationCompletePayload(BaseModel):
     loan_collection: str
     loan_id: str
@@ -26,8 +36,7 @@ async def verification_complete(
     payload: VerificationCompletePayload,
     x_internal_token: str = Header(..., alias="X-Internal-Token"),
 ):
-    if x_internal_token != settings.INTERNAL_SERVICE_TOKEN:
-        raise HTTPException(status_code=403, detail="Invalid internal token")
+    _check_token(x_internal_token)
 
     db = await get_db()
     collection_map = {
@@ -40,7 +49,6 @@ async def verification_complete(
     if collection is None:
         raise HTTPException(status_code=400, detail=f"Unknown loan collection: {payload.loan_collection}")
 
-    # Find the loan
     loan = None
     try:
         loan = await collection.find_one({"loan_id": int(payload.loan_id)})
@@ -54,20 +62,16 @@ async def verification_complete(
     now = datetime.utcnow()
 
     if payload.approved:
-        # Use verification_done so manager queue and admin queue see it correctly
-        new_status = LoanStatus.VERIFICATION_DONE
         update = {
-            "status": new_status,
+            "status": LoanStatus.VERIFICATION_DONE,
             "verified_by": payload.verifier_id,
             "verification_approved": True,
             "verification_completed_at": now,
             "verification_completed_by_id": payload.verifier_id,
         }
     else:
-        # Rejected by verification team
-        new_status = LoanStatus.REJECTED
         update = {
-            "status": new_status,
+            "status": LoanStatus.REJECTED,
             "verified_by": payload.verifier_id,
             "verification_approved": False,
             "verification_completed_at": now,
@@ -76,10 +80,22 @@ async def verification_complete(
             "rejected_by_id": payload.verifier_id,
         }
 
-    await collection.update_one(
-        {"_id": loan["_id"]},
-        {"$set": update},
-    )
-
+    await collection.update_one({"_id": loan["_id"]}, {"$set": update})
     updated = await collection.find_one({"_id": loan["_id"]})
     return normalize_doc(updated)
+
+
+# ── Internal EMI payment (called by payment-service) ─────────
+class PayEmiPayload(BaseModel):
+    customer_id: str
+
+
+@router.post("/pay-emi/{loan_id}")
+async def internal_pay_emi(
+    loan_id: str,
+    payload: PayEmiPayload,
+    x_internal_token: str = Header(..., alias="X-Internal-Token"),
+):
+    """Pay next EMI from wallet. Called internally by payment-service."""
+    _check_token(x_internal_token)
+    return await pay_emi_any_wallet(loan_id, payload.customer_id)
