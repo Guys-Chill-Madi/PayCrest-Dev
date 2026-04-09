@@ -9,6 +9,8 @@ from ..core.config import settings
 from ..database.mongo import get_db
 from bson import ObjectId
 from ..utils.id import to_object_id
+from fastapi import Header
+from typing import Optional
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_PREFIX}/auth/token")
 
@@ -76,3 +78,14 @@ def require_roles(*allowed_roles: str):
             )
         return user
     return dep
+
+async def internal_or_user_auth(
+    x_internal_token: str = Header(default=None),
+    token: str = Depends(oauth2_scheme)
+):
+    # ✅ CASE 1: Internal service call
+    if x_internal_token and x_internal_token == settings.INTERNAL_SERVICE_TOKEN:
+        return {"role": "internal_service"}
+
+    # ✅ CASE 2: Normal user JWT
+    return await get_current_user(token)

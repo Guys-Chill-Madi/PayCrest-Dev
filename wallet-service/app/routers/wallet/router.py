@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-
+from ...core.security import internal_or_user_auth
 from ...core.security import require_roles
 from ...models.enums import Roles
 from ...schemas.wallet import (
@@ -81,7 +81,7 @@ async def internal_debit(
     customer_id: str | int,
     amount: float,
     description: str = "Transaction",
-    user=Depends(require_roles(Roles.ADMIN, Roles.MANAGER))
+    auth=Depends(internal_or_user_auth)   # ✅ CHANGE HERE
 ):
     """
     Internal debit (for EMI, loan payments, etc.).
@@ -102,7 +102,7 @@ async def internal_credit(
     customer_id: str | int,
     amount: float,
     description: str = "Transaction",
-    user=Depends(require_roles(Roles.ADMIN, Roles.MANAGER))
+    auth=Depends(internal_or_user_auth)   # ✅ CHANGE HERE
 ):
     """
     Internal credit (for payment successes, top-ups, etc.).
