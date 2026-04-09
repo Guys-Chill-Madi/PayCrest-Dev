@@ -221,26 +221,27 @@ def _build_sanction_letter_pdf(loan: dict, collection_name: str) -> bytes:
     return buffer.getvalue()
 
 
-async def _store_sanction_document(
-    customer_id,
-    loan_id,
-    pdf_bytes: bytes,
-) -> str:
-    """Store generated sanction letter PDF in MongoDB documents collection."""
+async def _store_sanction_document(customer_id, loan_id, pdf_bytes: bytes) -> str:
     db = await get_db()
+
     doc = {
-        "customer_id": customer_id,
+        "customer_id": str(customer_id),
         "filename": f"sanction_letter_{loan_id}.pdf",
         "doc_type": "sanction_letter",
         "content_type": "application/pdf",
         "data": pdf_bytes,
         "size": len(pdf_bytes),
-        "metadata": {"loan_id": loan_id},
+        "metadata": {
+            "loan_id": str(loan_id)   # ✅ FIXED TYPE
+        },
         "created_at": datetime.utcnow(),
     }
-    result = await db.documents.insert_one(doc)
-    return str(result.inserted_id)
 
+    result = await db.documents.insert_one(doc)
+
+    print(f"📄 Document stored: {result.inserted_id}")
+
+    return str(result.inserted_id)
 
 # ── Loan action helpers ────────────────────────────────────────────────────────
 
@@ -281,57 +282,63 @@ async def _admin_reject(collection_name, loan_id, admin_id, reason: str):
 
 async def _send_sanction(collection_name, loan_id, admin_id):
     db = await get_db()
+
     loan = await _find_in_collection(db, collection_name, loan_id)
     if not loan:
         raise HTTPException(status_code=404, detail="Loan not found")
 
-    actual_loan_id = loan.get("loan_id")
-    customer_id = loan.get("customer_id")
+    # ✅ FIX: normalize values
+    actual_loan_id = str(loan.get("loan_id"))
+    customer_id = str(loan.get("customer_id"))
 
-    # Check if sanction letter already exists for this loan
+    # ✅ FIX: consistent lookup
     existing = await db.documents.find_one({
         "doc_type": "sanction_letter",
         "metadata.loan_id": actual_loan_id,
     })
 
     if not existing:
-        # Generate sanction letter PDF
         try:
+            print(f"🚀 Generating PDF for loan {actual_loan_id}")
+
             pdf_bytes = _build_sanction_letter_pdf(loan, collection_name)
-            document_id = await _store_sanction_document(customer_id, actual_loan_id, pdf_bytes)
+
+            if not pdf_bytes or len(pdf_bytes) == 0:
+                raise Exception("PDF generation returned empty data")
+
+            document_id = await _store_sanction_document(
+                customer_id,
+                actual_loan_id,
+                pdf_bytes
+            )
+
+            print(f"✅ PDF stored with ID: {document_id}")
+
         except Exception as e:
-            print(f"[ADMIN] Sanction letter PDF generation failed for loan {actual_loan_id}: {e}")
-            document_id = None
+            print("❌ ERROR:", e)
+
+            # ❌ BEFORE: silent fail
+            # ✅ NOW: proper error
+            raise HTTPException(
+                status_code=500,
+                detail=f"Sanction letter generation failed: {str(e)}"
+            )
     else:
         document_id = str(existing["_id"])
+        print(f"⚡ Using existing document: {document_id}")
 
-    # Update loan status to SANCTION_SENT and store document_id reference
+    # ✅ update loan
     update_fields = {
         "status": LoanStatus.SANCTION_SENT,
         "admin_id": str(admin_id),
         "sanction_sent_at": datetime.utcnow(),
+        "sanction_document_id": document_id,
     }
-    if document_id:
-        update_fields["sanction_document_id"] = document_id
 
     await db[collection_name].update_one(
         {"_id": loan["_id"]},
         {"$set": update_fields},
     )
-
-    # Notify customer
-    try:
-        await db.notifications.insert_one({
-            "customer_id": customer_id,
-            "title": "Sanction Letter Ready",
-            "message": f"Your sanction letter for loan {actual_loan_id} is ready. Please review and sign.",
-            "kind": "success",
-            "read": False,
-            "meta": {"loan_id": actual_loan_id, "document_type": "sanction_letter"},
-            "created_at": datetime.utcnow(),
-        })
-    except Exception:
-        pass
 
     return normalize_doc(await db[collection_name].find_one({"_id": loan["_id"]}))
 
