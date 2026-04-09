@@ -76,47 +76,6 @@ async def debit_money(payload: AddMoneyRequest, user=Depends(require_roles(Roles
     }
 
 
-@router.post("/internal/debit")
-async def internal_debit(
-    customer_id: str | int,
-    amount: float,
-    description: str = "Transaction",
-    auth=Depends(internal_or_user_auth)   # ✅ CHANGE HERE
-):
-    """
-    Internal debit (for EMI, loan payments, etc.).
-    Only admin/manager can call this.
-    """
-    transaction = await debit_wallet(customer_id, amount, description)
-    
-    return {
-        "success": True,
-        "message": f"Debited â‚¹{amount} from customer wallet",
-        "transaction_id": transaction.get("transaction_id"),
-        "new_balance": transaction.get("new_balance"),
-    }
-
-
-@router.post("/internal/credit")
-async def internal_credit(
-    customer_id: str | int,
-    amount: float,
-    description: str = "Transaction",
-    auth=Depends(internal_or_user_auth)   # ✅ CHANGE HERE
-):
-    """
-    Internal credit (for payment successes, top-ups, etc.).
-    Only admin/manager can call this.
-    """
-    transaction = await credit_wallet(customer_id, amount, description)
-    
-    return {
-        "success": True,
-        "message": f"Credited â‚¹{amount} to customer wallet",
-        "transaction_id": transaction.get("transaction_id"),
-        "new_balance": transaction.get("new_balance"),
-    }
-
 
 @router.get("/transactions")
 async def get_transactions(

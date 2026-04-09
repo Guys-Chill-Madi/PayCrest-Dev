@@ -11,6 +11,7 @@ from bson import ObjectId
 from ..utils.id import to_object_id
 from fastapi import Header
 from typing import Optional
+from fastapi import Request
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_PREFIX}/auth/token")
 
@@ -80,12 +81,17 @@ def require_roles(*allowed_roles: str):
     return dep
 
 async def internal_or_user_auth(
-    x_internal_token: str = Header(default=None),
-    token: str = Depends(oauth2_scheme)
+    request: Request,
+    x_internal_token: Optional[str] = Header(default=None),
 ):
-    # ✅ CASE 1: Internal service call
+    # Case 1: internal service call — no JWT needed
     if x_internal_token and x_internal_token == settings.INTERNAL_SERVICE_TOKEN:
         return {"role": "internal_service"}
 
-    # ✅ CASE 2: Normal user JWT
+    # Case 2: normal JWT auth — extract manually so we control the 401
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    token = auth_header.split(" ", 1)[1]
     return await get_current_user(token)
