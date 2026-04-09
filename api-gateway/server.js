@@ -62,11 +62,25 @@ const generateProxyOptions = (pathPrefix, targetService) => {
     target: targetService,
     changeOrigin: true,
     xfwd: true,
+
     pathRewrite: (path) => path.replace(new RegExp(`^${pathPrefix}`), ''),
+
     on: {
+      proxyReq: (proxyReq, req, res) => {
+        // 🔥 FORCE FORWARD AUTH HEADER
+        if (req.headers.authorization) {
+          proxyReq.setHeader('Authorization', req.headers.authorization);
+        }
+
+        // Optional: forward internal token
+        if (req.headers['x-internal-token']) {
+          proxyReq.setHeader('X-Internal-Token', req.headers['x-internal-token']);
+        }
+      },
+
       error: (err, req, res) => {
         console.error(`[Proxy Error] ${req.method} ${req.url} -> ${targetService}`, err.message);
-        res.status(503).json({ error: 'Service unavailable', service: targetService, status: 503 });
+        res.status(503).json({ error: 'Service unavailable', service: targetService });
       }
     }
   });
