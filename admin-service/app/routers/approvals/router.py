@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import simpleSplit
 from reportlab.pdfgen import canvas
-
+from app.services.document_service import get_document_binary
 from app.core.security import require_roles
 from app.database.mongo import get_db
 from app.models.enums import LoanCollection, LoanStatus, Roles
@@ -56,8 +56,6 @@ def _sanitize_loan_doc(doc: dict) -> dict:
     return out
 
 
-async def get_document_binary(doc_id: str):
-    return {"data": b"", "content_type": "application/octet-stream", "filename": "placeholder.bin"}
 
 
 async def _find_in_collection(db, collection_name: str, loan_id: str):
