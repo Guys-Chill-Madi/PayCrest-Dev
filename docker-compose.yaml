@@ -294,6 +294,8 @@ services:
     container_name: paycrest-gateway
     restart: unless-stopped
     environment:
+      JWT_SECRET: pycrest_jwt_secret_devops_2024
+      JWT_ALGORITHM: HS256
       PORT: "3000"
       FRONTEND_ORIGIN: http://44.223.16.184
       AUTH_SERVICE_URL: http://auth-service:8000
