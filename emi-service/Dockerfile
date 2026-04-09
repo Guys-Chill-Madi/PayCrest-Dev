@@ -9,6 +9,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app
 WORKDIR /app
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 COPY --from=builder /install /usr/local
 COPY --chown=appuser:appgroup app ./app
 USER appuser
