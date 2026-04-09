@@ -473,6 +473,7 @@ async def download_sanction_letter(loan_id: str, user=Depends(require_roles(Role
     cid = user.get("customer_id") or user.get("_id")
     db = await get_db()
     from ...utils.id import loan_id_filter
+
     filt = loan_id_filter(loan_id)
     filt["customer_id"] = cid
 
@@ -487,11 +488,14 @@ async def download_sanction_letter(loan_id: str, user=Depends(require_roles(Role
     if not loan:
         raise HTTPException(status_code=404, detail="Loan not found")
 
-    doc_id = loan.get("sanction_letter_document_id")
+    # ✅ FIXED HERE
+    doc_id = loan.get("sanction_document_id")
+
     if not doc_id:
         raise HTTPException(status_code=404, detail="Sanction letter not generated yet")
 
     doc = await get_document_binary(str(doc_id))
+
     return StreamingResponse(
         io.BytesIO(doc["data"]),
         media_type=doc["content_type"],
