@@ -140,10 +140,15 @@ async def download_loan_document_for_manager(
 
     # Map doc_type → loan field
     field_map = {
-        "pay_slip": "pay_slip",
         "aadhar_card": "aadhar_card",
         "pan_card": "pan_card",
         "photo": "photo",
+        "pay_slip": "pay_slip",
+        "vehicle_price_doc": "vehicle_price_doc",
+        "home_property_doc": "home_property_doc",
+        "fees_structure": "fees_structure",
+        "bonafide_certificate": "bonafide_certificate",
+        "collateral_doc": "collateral_doc",
     }
 
     field = field_map.get(doc_type)
