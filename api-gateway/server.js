@@ -3,11 +3,37 @@ const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const cors = require('cors');
 const morgan = require('morgan');
+const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET;
+const INTERNAL_SERVICE_TOKEN = process.env.INTERNAL_SERVICE_TOKEN;
 
-// 1. Manual Preflight Handling (Crucial for Proxy overlap)
+if (!JWT_SECRET) console.warn('[GATEWAY] WARNING: JWT_SECRET is not set');
+if (!INTERNAL_SERVICE_TOKEN) console.warn('[GATEWAY] WARNING: INTERNAL_SERVICE_TOKEN is not set');
+
+// ── Rate limiting ─────────────────────────────────────────────
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many auth attempts, please slow down' },
+});
+
+app.use(globalLimiter);
+
+// ── CORS + preflight ──────────────────────────────────────────
 app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
     const origin = req.headers.origin || '*';
@@ -21,72 +47,90 @@ app.use((req, res, next) => {
   next();
 });
 
-// 2. Dynamic CORS for standard requests
-const corsOptions = {
-  origin: (origin, callback) => {
-    // This allows every origin that hits the gateway
-    callback(null, true); 
-  },
+app.use(cors({
+  origin: (origin, callback) => callback(null, true),
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-Internal-Token'],
-};
+}));
 
-app.use(cors(corsOptions));
-
-// 3. Logging
+// ── Logging ───────────────────────────────────────────────────
 app.use(morgan('[:date[iso]] [GATEWAY] :method :url -> :status | :response-time ms'));
 
-// ── Health check ──────────────────────────────────────────────────────────────
+// ── Health check (before JWT middleware) ─────────────────────
 app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    gateway: 'running',
-    timestamp: new Date().toISOString(),
-    services: {
-      'auth-service': process.env.AUTH_SERVICE_URL,
-      'loan-service': process.env.LOAN_SERVICE_URL,
-      'emi-service': process.env.EMI_SERVICE_URL,
-      'wallet-service': process.env.WALLET_SERVICE_URL,
-      'payment-service': process.env.PAYMENT_SERVICE_URL,
-      'verification-service': process.env.VERIFICATION_SERVICE_URL,
-      'admin-service': process.env.ADMIN_SERVICE_URL,
-      'manager-service': process.env.MANAGER_SERVICE_URL,
-    }
-  });
+  res.json({ status: 'ok', gateway: 'running', timestamp: new Date().toISOString() });
 });
 
-// ── Proxy factory ─────────────────────────────────────────────────────────────
-const generateProxyOptions = (pathPrefix, targetService) => {
+// ── Public routes (no JWT required) ──────────────────────────
+const PUBLIC_PREFIXES = [
+  '/api/auth/token',
+  '/api/auth/register',
+  '/api/auth/forgot-password',
+  '/health',
+];
+
+function isPublic(path) {
+  return PUBLIC_PREFIXES.some(prefix => path.startsWith(prefix));
+}
+
+// ── JWT middleware ────────────────────────────────────────────
+function jwtMiddleware(req, res, next) {
+  if (isPublic(req.path)) return next();
+
+  const authHeader = req.headers['authorization'] || '';
+  if (!authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or malformed Authorization header' });
+  }
+
+  const token = authHeader.slice(7);
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expired' });
+    }
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
+app.use(jwtMiddleware);
+
+// ── Proxy factory ─────────────────────────────────────────────
+function makeProxy(pathPrefix, targetUrl) {
   return createProxyMiddleware({
-    target: targetService,
+    target: targetUrl,
     changeOrigin: true,
     xfwd: true,
 
-    pathRewrite: (path) => path.replace(new RegExp(`^${pathPrefix}`), ''),
+    pathRewrite: (path) => path.replace(new RegExp(`^${pathPrefix}`), '') || '/',
 
     on: {
-      proxyReq: (proxyReq, req, res) => {
-        // 🔥 FORCE FORWARD AUTH HEADER
-        if (req.headers.authorization) {
-          proxyReq.setHeader('Authorization', req.headers.authorization);
+      proxyReq: (proxyReq, req) => {
+        // Always inject internal token so services can verify the request came from gateway
+        proxyReq.setHeader('X-Internal-Token', INTERNAL_SERVICE_TOKEN || '');
+
+        // Forward validated user identity — services use this instead of re-decoding JWT
+        if (req.user) {
+          proxyReq.setHeader('X-User-Id',   String(req.user.user_id || ''));
+          proxyReq.setHeader('X-User-Role',  String(req.user.role   || ''));
         }
 
-        // Optional: forward internal token
-        if (req.headers['x-internal-token']) {
-          proxyReq.setHeader('X-Internal-Token', req.headers['x-internal-token']);
+        // Still forward Authorization header for services that fall back to JWT (dev access)
+        if (req.headers.authorization) {
+          proxyReq.setHeader('Authorization', req.headers.authorization);
         }
       },
 
       error: (err, req, res) => {
-        console.error(`[Proxy Error] ${req.method} ${req.url} -> ${targetService}`, err.message);
-        res.status(503).json({ error: 'Service unavailable', service: targetService });
-      }
-    }
+        console.error(`[Proxy Error] ${req.method} ${req.url}`, err.message);
+        res.status(503).json({ error: 'Service unavailable' });
+      },
+    },
   });
-};
+}
 
-// ── Route table ───────────────────────────────────────────────────────────────
+// ── Route table ───────────────────────────────────────────────
 const routes = {
   '/api/auth':         process.env.AUTH_SERVICE_URL,
   '/api/admin/emi':    process.env.EMI_SERVICE_URL,
@@ -102,16 +146,20 @@ const routes = {
   '/api/manager':      process.env.MANAGER_SERVICE_URL,
 };
 
-for (const [pathPrefix, targetUrl] of Object.entries(routes)) {
-  if (targetUrl) {
-    app.use(pathPrefix, generateProxyOptions(pathPrefix, targetUrl));
+// Stricter rate limit on auth routes
+app.use('/api/auth', authLimiter);
+
+for (const [prefix, url] of Object.entries(routes)) {
+  if (url) {
+    app.use(prefix, makeProxy(prefix, url));
   } else {
-    console.warn(`[WARNING] No URL configured for ${pathPrefix}`);
+    console.warn(`[GATEWAY] No URL configured for ${prefix}`);
   }
 }
 
-// ── Start ─────────────────────────────────────────────────────────────────────
+// ── Start ─────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n🚀 API Gateway is running on http://localhost:${PORT}`);
-  console.log(`CORS is configured to dynamically allow all incoming origins.`);
+  console.log(`\n🚀 API Gateway running on http://localhost:${PORT}`);
+  console.log(`   JWT auth:      ${JWT_SECRET ? 'enabled' : 'DISABLED (no JWT_SECRET)'}`);
+  console.log(`   Rate limiting: enabled (200 global / 20 auth per minute)`);
 });
