@@ -99,7 +99,7 @@ async def download_sanction_letter_for_manager(
     loan_collection, loan = await find_loan_any(loan_id)
     if not loan_collection or not loan:
         raise HTTPException(status_code=404, detail="Loan not found")
-    doc_id = loan.get("sanction_letter_document_id")
+    doc_id = loan.get("sanction_document_id")
     if not doc_id:
         raise HTTPException(status_code=404, detail="Sanction letter not generated yet")
     doc = await get_document_binary(str(doc_id))
