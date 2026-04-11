@@ -4,7 +4,7 @@ metadata:
   name: mongodb
   namespace: pc-data 
 spec:
-  replicas: 3
+  replicas: 1
   serviceName: mongodb 
   selector:
     matchLabels:
@@ -14,23 +14,9 @@ spec:
       labels:
         app: mongodb
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: mongodb
-                topologyKey: "kubernetes.io/hostname"
       containers:
         - name: mongodb
           image: mongo:7.0
-          command:
-          - mongod
-          - "--replSet"
-          - "rs0"
-          - "--bind_ip_all"
           ports:
             - containerPort: 27017
           
