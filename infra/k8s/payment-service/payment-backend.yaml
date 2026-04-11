@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: payment-service
+  name: payment-deploy
   namespace: pc-app
 spec:
   replicas: 2
@@ -24,7 +24,7 @@ spec:
                 topologyKey: kubernetes.io/hostname
 
       containers:
-        - name: payment-service
+        - name: payment-cont
           image: chillmadiguys/payment-service:v1.1.1
           ports:
             - containerPort: 8000
