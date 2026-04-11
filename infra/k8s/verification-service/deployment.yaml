@@ -30,7 +30,7 @@ spec:
 
       containers:
         - name: frontend-verification-cont
-          image: chillmadiguys/wallet-service:v1.1.1
+          image: chillmadiguys/verification-service:v1.1.1
           ports:
             - containerPort: 8000
 
