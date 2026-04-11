@@ -23,3 +23,10 @@ spec:
       port: 53
     - protocol: TCP
       port: 53
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: pc-edge
+     ports:
+     - protocol: TCP
+       port: 3000
