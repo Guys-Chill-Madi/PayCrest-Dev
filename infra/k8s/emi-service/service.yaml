@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: emi-svc
+  name: emi-service
   namespace: pc-app
 spec:
   selector:
-    app: emi
+    emi: service
   ports:
     - port: 8000
       targetPort: 8000

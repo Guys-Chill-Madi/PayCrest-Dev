@@ -1,13 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: loan-deploy
+  name: loan-service
   namespace: pc-app
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: loan
+      loan: service
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -16,17 +16,17 @@ spec:
   template:
     metadata:
       labels:
-        app: loan
+        loan: service
     spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
               matchExpressions:
-              - key: app
+              - key: loan
                 operator: In
                 values:
-                  - loan
+                  - service
             topologyKey: "kubernetes.io/hostname"
       containers:
         - name: loan-container
@@ -36,9 +36,9 @@ spec:
             - containerPort: 8000
           envFrom:
             - configMapRef:
-                name: pc-config
+                name: pc-config-global
             - secretRef:
-                name: pc-secrets-app
+                name: pc-secrets-global
           resources:
             requests:
               cpu: "100m"
@@ -68,5 +68,5 @@ spec:
       volumes:
         - name: loan-volume
           persistentVolumeClaim:
-            claimName: loan-pvc
+            claimName: pc-upload-pvc
           

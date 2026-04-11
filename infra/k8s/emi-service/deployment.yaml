@@ -1,13 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: emi-deploy
+  name: emi-service
   namespace: pc-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: emi
+      emi: service
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -16,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        app: emi
+        emi: service
     spec:
       containers:
         - name: emi-container
@@ -26,9 +26,9 @@ spec:
             - containerPort: 8000
           envFrom:
             - configMapRef:
-                name: pc-config
+                name: pc-config-global
             - secretRef:
-                name: pc-secrets-app
+                name: pc-secrets-global
           resources:
             requests:
               cpu: "100m"
