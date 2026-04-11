@@ -4,7 +4,7 @@ metadata:
   name: wallet-pvc
   namespace: pc-app
 spec:
-  storageClassName: wallet-storage
+  storageClassName: nfs-client
   accessModes:
     - ReadWriteMany
   resources:
