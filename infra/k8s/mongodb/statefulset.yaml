@@ -20,7 +20,7 @@ spec:
           ports:
             - containerPort: 27017
           
-          resources:
+          resources:   # resource can be changed according to the useage
             requests:
               cpu: "250m"
               memory: "512Mi"
@@ -32,7 +32,7 @@ spec:
             - name: MONGO_INITDB_ROOT_USERNAME
               valuesFrom:
                 secretKeyRef:
-                  name: mongo-secret
+                  name: mongo-secret #Mapped using secrets
                   key: MONGO_INITDB_ROOT_USERNAME
             
             - name: MONGO_INITDB_ROOT_PASSWORD
@@ -59,5 +59,5 @@ spec:
         storageClassName: nfs-csi 
         resources:
           requests:
-            storage: 10Gi
+            storage: 10Gi #requested storage
 
