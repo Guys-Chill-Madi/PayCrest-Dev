@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pc-config-global
+  namespace: pc-app
+data:
+  UPLOAD_BASE_PATH: "/app/uploads"
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+  PYTHONPATH: "/app"
