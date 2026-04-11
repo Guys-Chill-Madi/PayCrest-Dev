@@ -1,0 +1,51 @@
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: mongodb
+  namespace: pc-data
+spec:
+  members: 3
+  type: ReplicaSet
+  version: "7.0"
+
+  security:
+    authentication:
+      modes: ["SCRAM"]
+
+  users:
+    - name: pycrest
+      db: pycrest
+      passwordSecretRef:
+        name: mongo-secret
+      roles:
+        - name: readWrite
+          db: pycrest
+        - name: dbAdmin
+          db: pycrest
+
+  statefulSet:
+    spec:
+      template:
+        spec:
+          tolerations:
+            - operator: "Exists"
+
+          containers:
+            - name: mongod
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "256Mi"
+                limits:
+                  cpu: "500m"
+                  memory: "512Mi"
+
+      volumeClaimTemplates:
+        - metadata:
+            name: data-volume
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            storageClassName: nfs-csi
+            resources:
+              requests:
+                storage: 10Gi
