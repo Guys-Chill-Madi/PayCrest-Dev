@@ -18,14 +18,15 @@ spec:
       labels:
         app: wallet 
     spec:
-      podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: wallet 
-                topologyKey: "kubernetes.io/hostname"
+      affinity:
+        podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  labelSelector:
+                    matchLabels:
+                      app: wallet 
+                  topologyKey: "kubernetes.io/hostname"
       containers:
         - name: frontend-wallet-cont 
           image: chillmadiguys/wallet-service:v1.1.1
