@@ -1,0 +1,8 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass 
+metadata:
+  name: nfs-csi 
+provisioner: nfs.csi.k8s.io # csi provider
+parameters:
+  server: 10.0.1.140 # to be mapped to current IP
+  share: /var/nfs/general
