@@ -64,7 +64,7 @@ spec:
     - metadata:
         name: mongo-data 
       spec:
-        accessMode: 
+        accessModes: 
           - "ReadWriteOnce"
         storageClassName: nfs-csi 
         resources:
