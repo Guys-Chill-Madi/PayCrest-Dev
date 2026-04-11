@@ -4,29 +4,30 @@ metadata:
   name: frontend-isolation
   namespace: pc-frontend
 spec:
-  podSelector: {} 
+  podSelector: {}
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
   ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: pc-gateway 
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: pc-gateway
   egress:
-  - to:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: kube-system
-    ports:
-    - protocol: UDP
-      port: 53
-    - protocol: TCP
-      port: 53
-  - to:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: pc-edge
-     ports:
-     - protocol: TCP
-       port: 3000
+    # DNS resolution — must always be first
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: pc-edge
+      ports:
+        - protocol: TCP
+          port: 3000
