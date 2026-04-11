@@ -33,15 +33,15 @@ spec:
               memory: "512Mi"
           envFrom: 
             - secretRef:
-                name: admin-secret
+                name: pc-secrets-app
             - configMapRef:
-                name: admin-config
+                name: pc-config
           volumeMounts:
             - name: uploads
               mountPath: /data/db
       volumes:
         - name: uploads
-          persitantVolumeClaim:
+          persistentVolumeClaim:
             claimName: pvc
 
                 
