@@ -4,5 +4,5 @@ metadata:
   name: nfs-csi 
 provisioner: nfs.csi.k8s.io # csi provider
 parameters:
-  server: # to be mapped to current IP
+  server: 10.0.1.140 # to be mapped to current IP
   share: /var/nfs/general
