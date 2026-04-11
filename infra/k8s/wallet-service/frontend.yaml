@@ -1,0 +1,38 @@
+apiVersion: apps/v1 
+kind: Deployment 
+metadata:
+  name: frontend-deployment 
+  namespace: pc-app
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate 
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: wallet 
+  template:
+    metadata:
+      labels:
+        app: wallet 
+    spec:
+      containers:
+        - name: frontend-wallet-cont 
+          image: chillmadiguys/wallet-service:v1.1.1
+          ports:
+            - containerPort: 8000
+          resources:
+            request:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "400m"
+              memory: "512Mi"
+          envFrom:
+            - configMapRef:
+                name: wallet-configmap
+            - secretRef:
+                name: wallet-secret
+              

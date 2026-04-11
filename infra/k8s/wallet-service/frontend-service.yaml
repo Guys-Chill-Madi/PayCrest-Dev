@@ -1,0 +1,12 @@
+apiVrersion: v1 
+kind: Service 
+metadata:
+  name: frontend-service 
+  namespace: pc-app
+spec:
+  selector:
+    app: wallet 
+  ports:
+    - targetPort: 8000
+      port: 8000
+  type: ClusterIP
