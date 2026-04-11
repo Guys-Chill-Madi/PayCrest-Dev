@@ -39,19 +39,19 @@ spec:
 
           env:
             - name: MONGO_INITDB_ROOT_USERNAME
-              valuesFrom:
+              valueFrom:
                 secretKeyRef:
                   name: mongo-secret #Mapped using secrets
                   key: MONGO_INITDB_ROOT_USERNAME
             
             - name: MONGO_INITDB_ROOT_PASSWORD
-              valuesFrom:
+              valueFrom:
                 secretKeyRef: 
                   name: mongo-secret
                   key: MONGO_INITDB_ROOT_PASSWORD
 
             - name: MONGO_INITDB_DATABASE
-              valuesFrom:
+              valueFrom:
                 secretKeyRef:
                   name: mongo-secret
                   key: MONGO_INITDB_DATABASE
