@@ -14,13 +14,13 @@ spec:
         app: payment-service
     spec:
       affinity:
-        podAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: mongodb
+                    app: payment-service
                 topologyKey: kubernetes.io/hostname
 
       containers:
