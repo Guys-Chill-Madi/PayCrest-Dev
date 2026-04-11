@@ -8,6 +8,11 @@ spec:
   selector:
     matchLabels:
       app: payment-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: 
+      maxUnavailable: 1
+      maxSurge: 1    
   template:
     metadata:
       labels:
@@ -16,16 +21,18 @@ spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: payment-service
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In 
+                values:
+                  - payment-service
                 topologyKey: kubernetes.io/hostname
 
       containers:
         - name: payment-cont
           image: chillmadiguys/payment-service:v1.1.1
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
 
