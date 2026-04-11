@@ -8,6 +8,11 @@ spec:
   selector:
     matchLabels:
       app: manager-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   template:
     metadata:
       labels:
@@ -15,29 +20,26 @@ spec:
     spec:
       containers:
         - name: manager-service
-          image: chillmadiguys/manager-service:v1.1.0
+          image: chillmadiguys/manager-service:v1.1.1
           ports:
             - containerPort: 8000
-
           envFrom:
             - configMapRef:
-                name: pycrest-global-config
+                name: manager-service-config
             - secretRef:
-                name: pycrest-global-secret
+                name: manager-service-secret
 
           volumeMounts:
             - name: uploads
               mountPath: /app/uploads
-
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: "100m"
+              memory: "256Mi"
             limits:
-              cpu: 500m
-              memory: 512Mi
-
+              cpu: "200m"
+              memory: "512Mi"
       volumes:
         - name: uploads
           persistentVolumeClaim:
-            claimName: pycrest-uploads-pvc
+            claimName: manager-pvc

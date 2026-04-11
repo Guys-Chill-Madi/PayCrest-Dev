@@ -4,7 +4,7 @@ metadata:
   name: manager-pvc
   namespace: pc-app
 spec:
-  storageClassName: pay-sc
+  storageClassName: nfs-csi
   accessModes:
     - ReadWriteMany
   resources:
