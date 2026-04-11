@@ -38,7 +38,7 @@ spec:
                 name: admin-config
           volumeMounts:
             - name: uploads
-              mountPath: /app/uploads
+              mountPath: /data/db
       volumes:
         - name: uploads
           persitantVolumeClaim:
