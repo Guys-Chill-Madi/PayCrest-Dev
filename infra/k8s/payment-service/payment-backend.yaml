@@ -7,7 +7,7 @@ spec:
   replicas: 2
   selector:
     matchLabels:
-      payment: service
+      app: payment-service
   strategy:
     type: RollingUpdate
     rollingUpdate: 
@@ -16,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        payment: service
+        app: payment-service
     spec:
       affinity:
         podAntiAffinity:

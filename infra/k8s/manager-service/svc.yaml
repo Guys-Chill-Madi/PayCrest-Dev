@@ -6,7 +6,7 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    payment: service
+    app: payment-service
   ports:
     - port: 8000
       targetPort: 8000
