@@ -25,7 +25,7 @@ spec:
 
       containers:
         - name: payment-service
-          image: chillmadiguys/payment-service:v1.1.0
+          image: chillmadiguys/payment-service:v1.1.1
           ports:
             - containerPort: 8000
 
