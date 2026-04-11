@@ -1,0 +1,49 @@
+# Deployment file for admin service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-deployment
+  namespace: pc-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  strategy: # Strategy for deployment
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1 # How many pods can go down
+      maxSurge: 1 # How many pods can create
+  template:
+    metadata: 
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: auth-cont
+          image: chillmadiguys/auth-service:v1.1.1
+          ports:
+            - containerPort: 8000
+          resources: # Used resources to avoid utilizing full resources of cluster
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "200m"
+              memory: "512Mi"
+          envFrom: 
+            - secretRef:
+                name: pc-secrets-app
+            - configMapRef:
+                name: pc-config
+          volumeMounts:
+            - name: uploads
+              mountPath: /data/db
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: pvc
+
+                
+
+    
