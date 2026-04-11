@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wallet-pvc
+  namespace: pc-app
+spec:
+  storageClassName: wallet-storage
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: "2Gi"

@@ -39,6 +39,14 @@ spec:
             limits:
               cpu: "400m"
               memory: "512Mi"
+          volumeMounts:
+            - name: wallet-volume
+              mountPath: /app/uploads 
+      volumes:
+        - name: loan-volume
+          persistentVolumeClaim:
+            claimName: loan-pvc
+        
           envFrom:
             - configMapRef:
                 name: wallet-configmap
