@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+  namespace: mongodb 
+spec:
+  replicas: 3
+  serviceName: mongodb 
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:7.0
+          ports:
+            - containerPort: 27017
+          
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valuesFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: MONGO_INITDB_ROOT_USERNAME
+            
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valuesFrom:
+                secretKeyRef: 
+                  name: mongo-secret
+                  key: MONGO_INITDB_ROOT_PASSWORD
+
+            - name: MONGO_INITDB_DATABASE
+              valuesFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: MONGO_INITDB_DATABASE
+
+          volumeMounts:
+            - name: mongo-data 
+              mountPath: /data/db 
+
+  volumeClaimTemplate:
+    - metadata:
+        name: mongo-data 
+      spec:
+        accessMode: ["ReadWriteOnce"]
+        storageClassName: nfs-csi 
+        resources:
+          requests:
+            storage: 10Gi
+
