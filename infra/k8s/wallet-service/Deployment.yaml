@@ -1,37 +1,39 @@
-apiVersion: apps/v1 
-kind: Deployment 
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: frontend-deployment 
+  name: frontend-deployment
   namespace: pc-app
 spec:
   replicas: 2
   strategy:
-    type: RollingUpdate 
+    type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
       maxSurge: 1
   selector:
     matchLabels:
-      app: wallet 
+      app: wallet
   template:
     metadata:
       labels:
-        app: wallet 
+        app: wallet
     spec:
       affinity:
         podAntiAffinity:
-            preferredDuringSchedulingIgnoredDuringExecution:
-              - weight: 100
-                podAffinityTerm:
-                  labelSelector:
-                    matchLabels:
-                      app: wallet 
-                  topologyKey: "kubernetes.io/hostname"
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: wallet
+                topologyKey: "kubernetes.io/hostname"
+
       containers:
-        - name: frontend-wallet-cont 
+        - name: frontend-wallet-cont
           image: chillmadiguys/wallet-service:v1.1.1
           ports:
             - containerPort: 8000
+
           resources:
             requests:
               cpu: "100m"
@@ -39,35 +41,19 @@ spec:
             limits:
               cpu: "400m"
               memory: "512Mi"
-          volumeMounts:
-            - name: wallet-volume
-              mountPath: /app/uploads 
-      volumes:
-        - name: wallet-volume
-          persistentVolumeClaim:
-            claimName: wallet-pvc
-        
+
+          # ✅ CORRECT PLACE
           envFrom:
             - configMapRef:
                 name: wallet-configmap
             - secretRef:
-                name: wallet-secret 
-          # readinessProbe:
-          #   httpGet:
-          #     path: /health
-          #     port: 8000
-          #   initialDelaySeconds: 10
-          #   periodSeconds: 10
-          #   timeoutSeconds: 5
-          #   failureThreshold: 3
- 
-         
-          # livenessProbe:
-          #   httpGet:
-          #     path: /health
-          #     port: 8000
-          #   initialDelaySeconds: 20
-          #   periodSeconds: 30
-          #   timeoutSeconds: 5
-          #   failureThreshold: 3
-              
+                name: wallet-secret
+
+          volumeMounts:
+            - name: wallet-volume
+              mountPath: /app/uploads
+
+      volumes:
+        - name: wallet-volume
+          persistentVolumeClaim:
+            claimName: wallet-pvc
