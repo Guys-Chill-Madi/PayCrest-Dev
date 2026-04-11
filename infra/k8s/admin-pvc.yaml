@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: pvc
-  namespace: ps-app
+  namespace: pc-app
 spec:
   accessModes:
     - ReadWriteMany
