@@ -17,6 +17,7 @@ spec:
       db: pycrest
       passwordSecretRef:
         name: mongo-secret
+        key: password
       roles:
         - name: readWrite
           db: pycrest
