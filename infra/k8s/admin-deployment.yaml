@@ -1,0 +1,49 @@
+# Deployment file for admin service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-deployment
+  namespace: pc-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin
+  strategy: # Strategy for deployment
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1 # How many pods can go down
+      maxSurge: 1 # How many pods can create
+  template:
+    metadata: 
+      labels:
+        app: admin
+    spec:
+      containers:
+        - name: admin-cont
+          image: chillmadiguys/admin-service:v1.1.1
+          ports:
+            - containerPort: 8000
+          resources: # Used resources to avoid utilizing full resources of cluster
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "200m"
+              memory: "512Mi"
+          envFrom: 
+            - secretRef:
+                name: admin-secret
+            - configMapRef:
+                name: admin-config
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+      volumes:
+        - name: uploads
+          persitantVolumeClaim:
+            claimName: pvc
+
+                
+
+    
