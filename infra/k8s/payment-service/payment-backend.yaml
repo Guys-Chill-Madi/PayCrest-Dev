@@ -31,9 +31,9 @@ spec:
 
           envFrom:
             - configMapRef:
-                name: pycrest-global-config
+                name: payment-service-config
             - secretRef:
-                name: pycrest-global-secret
+                name: payment-service-secret
 
           resources:
             requests:
