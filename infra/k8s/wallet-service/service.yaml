@@ -5,7 +5,7 @@ metadata:
   namespace: pc-app
 spec:
   selector:
-    app: wallet 
+    app: wallet-service  
   ports:
     - targetPort: 8000
       port: 8000
