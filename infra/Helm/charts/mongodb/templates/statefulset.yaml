@@ -2,10 +2,10 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: mongodb
-  namespace: pc-data 
+  namespace: pc-data
 spec:
   replicas: 1
-  serviceName: mongodb 
+  serviceName: mongodb
   selector:
     matchLabels:
       app: mongodb
@@ -19,10 +19,10 @@ spec:
           image: mongo:7.0
           ports:
             - containerPort: 27017
-          resources:   
+          resources:
             requests:
               cpu: "100m"
-              memory: "256Mi"
+              memory: "128Mi"
             limits:
               cpu: "500m"
               memory: "512Mi"
@@ -30,11 +30,11 @@ spec:
             - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret 
+                  name: mongo-secret
                   key: MONGO_INITDB_ROOT_USERNAME
             - name: MONGO_INITDB_ROOT_PASSWORD
               valueFrom:
-                secretKeyRef: 
+                secretKeyRef:
                   name: mongo-secret
                   key: MONGO_INITDB_ROOT_PASSWORD
             - name: MONGO_INITDB_DATABASE
@@ -43,16 +43,15 @@ spec:
                   name: mongo-secret
                   key: MONGO_INITDB_DATABASE
           volumeMounts:
-            - name: mongo-data 
-              mountPath: /data/db 
+            - name: mongo-data
+              mountPath: /data/db
   volumeClaimTemplates:
     - metadata:
-        name: mongo-data 
+        name: mongo-data
       spec:
-        accessModes: 
+        accessModes:
           - "ReadWriteOnce"
-        storageClassName: nfs-csi 
+        storageClassName: nfs-csi
         resources:
           requests:
-            storage: 10Gi 
-
+            storage: 10Gi

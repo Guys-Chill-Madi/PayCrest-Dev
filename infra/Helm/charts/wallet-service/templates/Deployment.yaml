@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wallet-service 
+  name: wallet-service
   namespace: pc-app
 spec:
   replicas: 2
@@ -30,12 +30,13 @@ spec:
       containers:
         - name: wallet-service-cont
           image: chillmadiguys/wallet-service:v1.1.1
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           resources:
             requests:
               cpu: "100m"
-              memory: "128Mi"
+              memory: "96Mi"
             limits:
               cpu: "400m"
               memory: "512Mi"

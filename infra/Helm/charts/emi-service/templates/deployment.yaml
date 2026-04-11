@@ -19,18 +19,18 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "96Mi"
+            limits:
+              cpu: "200m"
+              memory: "512Mi"
           envFrom:
             - configMapRef:
                 name: pc-config-global
             - secretRef:
                 name: pc-secrets-global
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "256Mi"
-            limits:
-              cpu: "200m"
-              memory: "512Mi"
           livenessProbe:
             httpGet:
               path: /health

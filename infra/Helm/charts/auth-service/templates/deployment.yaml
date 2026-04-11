@@ -8,23 +8,25 @@ spec:
   selector:
     matchLabels:
       app: auth-service
-  strategy: 
+  strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 1 
-      maxSurge: 1 
+      maxUnavailable: 1
+      maxSurge: 1
   template:
-    metadata: 
+    metadata:
       labels:
         app: auth-service
     spec:
       affinity:
         podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchLabels:
-                  app: auth-service
-              topologyKey: "kubernetes.io/hostname"
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: auth-service
+                topologyKey: "kubernetes.io/hostname"
       containers:
         - name: auth-service
           image: chillmadiguys/auth-service:v1.1.1
@@ -34,11 +36,11 @@ spec:
           resources:
             requests:
               cpu: "100m"
-              memory: "256Mi"
+              memory: "96Mi"
             limits:
               cpu: "200m"
               memory: "512Mi"
-          envFrom: 
+          envFrom:
             - secretRef:
                 name: pc-secrets-global
             - configMapRef:
@@ -62,7 +64,3 @@ spec:
         - name: uploads
           persistentVolumeClaim:
             claimName: pc-upload-pvc
-
-                
-
-    
