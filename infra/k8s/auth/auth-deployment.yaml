@@ -46,6 +46,22 @@ spec:
           volumeMounts:
             - name: uploads
               mountPath: /app/uploads
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
       volumes:
         - name: uploads
           persistentVolumeClaim:
