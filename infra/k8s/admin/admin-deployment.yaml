@@ -29,6 +29,7 @@ spec:
       containers:
         - name: admin-service
           image: chillmadiguys/admin-service:v1.1.1
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           resources: # Used resources to avoid utilizing full resources of cluster
