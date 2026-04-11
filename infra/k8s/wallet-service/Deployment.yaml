@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend-deployment
+  name: wallet-service 
   namespace: pc-app
 spec:
   replicas: 2
@@ -12,11 +12,11 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: wallet
+      app: wallet-service
   template:
     metadata:
       labels:
-        app: wallet
+        app: wallet-service
     spec:
       affinity:
         podAntiAffinity:
@@ -25,11 +25,11 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: wallet
+                    app: wallet-service
                 topologyKey: "kubernetes.io/hostname"
 
       containers:
-        - name: frontend-wallet-cont
+        - name: wallet-service-cont
           image: chillmadiguys/wallet-service:v1.1.1
           ports:
             - containerPort: 8000
@@ -45,9 +45,9 @@ spec:
         
           envFrom:
             - configMapRef:
-                name: wallet-configmap
+                name: pc-config-global
             - secretRef:
-                name: wallet-secret
+                name: pc-secrets-global
 
           volumeMounts:
             - name: wallet-volume
@@ -56,4 +56,4 @@ spec:
       volumes:
         - name: wallet-volume
           persistentVolumeClaim:
-            claimName: wallet-pvc
+            claimName: pc-upload-pvc

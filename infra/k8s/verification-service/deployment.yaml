@@ -1,8 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend-deployment
-  namespace: pc-app1
+  name: verification-service 
+  namespace: pc-app
 spec:
   replicas: 2
   strategy:
@@ -12,11 +12,11 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: verification
+      app: verification-service
   template:
     metadata:
       labels:
-        app: verification
+        app: verification-service
     spec:
       affinity:
         podAntiAffinity:
@@ -25,11 +25,11 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: verification
+                    app: verification-service
                 topologyKey: "kubernetes.io/hostname"
 
       containers:
-        - name: frontend-verification-cont
+        - name: verification-service-cont
           image: chillmadiguys/verification-service:v1.1.1
           ports:
             - containerPort: 8000
@@ -45,15 +45,15 @@ spec:
         
           envFrom:
             - configMapRef:
-                name: verification-configmap
+                name: pc-config-global
             - secretRef:
-                name: verification-secret
+                name: pc-secrets-global
 
           volumeMounts:
-            - name: verification-volume
+            - name: verification-service-volume
               mountPath: /app/uploads
 
       volumes:
-        - name: verification-volume
+        - name: verification-service-volume
           persistentVolumeClaim:
-            claimName: verification-pvc
+            claimName: pc-upload-pvc
