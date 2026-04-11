@@ -35,7 +35,6 @@ spec:
             - secretRef:
                 name: payment-service-secret
 
-          ## ✅ READINESS PROBE
           readinessProbe:
             httpGet:
               path: /health
@@ -45,7 +44,6 @@ spec:
             timeoutSeconds: 2
             failureThreshold: 3
 
-          ## ✅ LIVENESS PROBE
           livenessProbe:
             httpGet:
               path: /health
@@ -60,6 +58,6 @@ spec:
               cpu: "100m"
               memory: "256Mi"
             limits:
-              cpu: "500m"
+              cpu: "200m"
               memory: "512Mi"
 ``
