@@ -43,9 +43,9 @@ spec:
             - name: wallet-volume
               mountPath: /app/uploads 
       volumes:
-        - name: loan-volume
+        - name: wallet-volume
           persistentVolumeClaim:
-            claimName: loan-pvc
+            claimName: wallet-pvc
         
           envFrom:
             - configMapRef:
