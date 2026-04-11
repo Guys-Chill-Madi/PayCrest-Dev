@@ -8,11 +8,6 @@ spec:
   selector:
     matchLabels:
       app: manager-service
-  # strategy:
-  #   type: RollingUpdate
-  #   rollingUpdate:
-  #     maxUnavailable: 0
-  #     maxSurge: 1
   template:
     metadata:
       labels:
@@ -28,7 +23,6 @@ spec:
                 name: pc-config-global
             - secretRef:
                 name: pc-secrets-global
-
           volumeMounts:
             - name: manager-volume
               mountPath: /app/uploads
@@ -39,27 +33,18 @@ spec:
             limits:
               cpu: "200m"
               memory: "512Mi"
-
           readinessProbe:
             httpGet:
               path: /health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 5
-          #   timeoutSeconds: 2
-          #   failureThreshold: 3
-
           livenessProbe:
             httpGet:
               path: /health
               port: 8000
             initialDelaySeconds: 30
             periodSeconds: 10
-            # timeoutSeconds: 2
-            # failureThreshold: 3
-            
-        
-   
       volumes:
         - name: manager-volume
           persistentVolumeClaim:
