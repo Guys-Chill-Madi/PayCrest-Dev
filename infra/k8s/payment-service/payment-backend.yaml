@@ -5,11 +5,6 @@ metadata:
   namespace: pc-app
 spec:
   replicas: 2
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
   selector:
     matchLabels:
       app: payment-service
@@ -18,50 +13,32 @@ spec:
       labels:
         app: payment-service
     spec:
-      # affinity:
-      #   podAntiAffinity:
-      #     preferredDuringSchedulingIgnoredDuringExecution:
-      #       - weight: 100
-      #         podAffinityTerm:
-      #           labelSelector:
-      #             matchLabels:
-      #               app: payment-service
-      #           topologyKey: kubernetes.io/hostname
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: payment-service
+                topologyKey: kubernetes.io/hostname
 
       containers:
         - name: payment-service
-          image: chillmadiguys/payment-service:v1.1.1
+          image: chillmadiguys/payment-service:v1.1.0
           ports:
             - containerPort: 8000
 
           envFrom:
             - configMapRef:
-                name: payment-service-config
+                name: pycrest-global-config
             - secretRef:
-                name: payment-service-secret
-
-          # readinessProbe:
-          #   httpGet:
-          #     path: /health
-          #     port: 8000
-          #   initialDelaySeconds: 10
-          #   periodSeconds: 5
-          #   timeoutSeconds: 2
-          #   failureThreshold: 3
-
-          # livenessProbe:
-          #   httpGet:
-          #     path: /health
-          #     port: 8000
-          #   initialDelaySeconds: 30
-          #   periodSeconds: 10
-          #   timeoutSeconds: 2
-          #   failureThreshold: 3
+                name: pycrest-global-secret
 
           resources:
             requests:
-              cpu: "100m"
-              memory: "128Mi"
+              cpu: 100m
+              memory: 256Mi
             limits:
-              cpu: "200m"
-              memory: "200Mi"
+              cpu: 500m
+              memory: 512Mi
