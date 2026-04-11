@@ -8,9 +8,9 @@ spec:
   type: ReplicaSet
   version: "7.0"
 
-  security:
-    authentication:
-      modes: ["SCRAM"]
+  # security:
+  #   authentication:
+  #     modes: ["SCRAM"]
 
   users:
   - name: pycrest
