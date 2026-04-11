@@ -5,7 +5,7 @@ metadata:
   namespace: pc-app
 spec:
   accessModes:
-    ReadWriteMany
+    - ReadWriteMany
   storageClassName: nfs-csi
   resources: 
     requests:
