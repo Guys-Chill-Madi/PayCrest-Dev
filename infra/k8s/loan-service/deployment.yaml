@@ -61,7 +61,7 @@ spec:
           #   periodSeconds: 10
           #   timeoutSeconds: 2
           #   failureThreshold: 3
-          volumeMount:
+          volumeMounts:
             - name: loan-volume
               mountPath: /app/uploads
       volume:
