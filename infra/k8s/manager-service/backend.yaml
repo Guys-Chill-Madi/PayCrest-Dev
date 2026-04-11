@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: manager-service
-  namespace: cp-app
+  namespace: pc-app
 spec:
   replicas: 1
   selector:
