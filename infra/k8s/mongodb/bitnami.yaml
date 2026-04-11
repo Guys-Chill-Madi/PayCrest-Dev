@@ -12,17 +12,17 @@ spec:
     authentication:
       modes: ["SCRAM"]
 
-  users:
-    - name: pycrest
-      db: pycrest
-      passwordSecretRef:
-        name: mongo-secret
-        key: password
-      roles:
-        - name: readWrite
-          db: pycrest
-        - name: dbAdmin
-          db: pycrest
+  # users:
+  #   - name: pycrest
+  #     db: pycrest
+  #     passwordSecretRef:
+  #       name: mongo-secret
+  #       key: password
+  #     roles:
+  #       - name: readWrite
+  #         db: pycrest
+  #       - name: dbAdmin
+  #         db: pycrest
 
   statefulSet:
     spec:
