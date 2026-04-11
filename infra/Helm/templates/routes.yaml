@@ -7,27 +7,32 @@ spec:
   parentRefs:
     - name: paycrest-kgate
   rules:
-    - matches: 
-      - path:
-          type: Exact
-          value: /health
+    # Bug 9 fixed: original was missing the "-" before "path:" inside matches
+    - matches:
+        - path:
+            type: Exact
+            value: /health
       backendRefs:
-        - name: frontend
+        # Bug 10 fixed: was "name: frontend" — actual Service is named "frontend-service"
+        - name: frontend-service
           namespace: pc-frontend
           port: 80
+
     - matches:
-        - path: 
+        - path:
             type: PathPrefix
             value: /api
       backendRefs:
         - name: api-gateway
-          port: 3000
           namespace: pc-edge
+          port: 3000
+
     - matches:
-        - path: 
+        - path:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: frontend
-          port: 80
+        # Bug 10 fixed: same fix here
+        - name: frontend-service
           namespace: pc-frontend
+          port: 80

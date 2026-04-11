@@ -23,11 +23,10 @@ spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          -  labelSelector:
-               matchLabels:
-                 app: admin-service
-             topologyKey: "kubernetes.io/hostname"    
-              
+            - labelSelector:
+                matchLabels:
+                  app: admin-service
+              topologyKey: "kubernetes.io/hostname"
       containers:
         - name: admin-service
           image: chillmadiguys/admin-service:v1.1.1
@@ -46,6 +45,13 @@ spec:
               port: 8000
             initialDelaySeconds: 5
             periodSeconds: 10
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "200m"
+              memory: "512Mi"
           envFrom:
             - configMapRef:
                 name: pc-config-global
@@ -58,7 +64,3 @@ spec:
         - name: uploads
           persistentVolumeClaim:
             claimName: pc-upload-pvc
-      
-
-            
-  

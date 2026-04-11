@@ -4,33 +4,41 @@ metadata:
   name: app-isolation
   namespace: pc-app
 spec:
-  podSelector: {} 
+  podSelector: {}
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
   ingress:
-    - from: 
-      - namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: pc-edge
+    # Bug 4 fixed: original had "- from:" as a sibling of the dash, breaking the rule entirely.
+    # Correct structure: each ingress array item is "- from: [...]  ports: [...]"
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: pc-edge
       ports:
-      - protocol: TCP
-        port: 8000 
+        - protocol: TCP
+          port: 8000
+    # Allow inter-service traffic within pc-app (services calling each other internally)
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8000
   egress:
     - to:
-      - namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: pc-data
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: pc-data
       ports:
-      - protocol: TCP
-        port: 27017
-
+        - protocol: TCP
+          port: 27017
+    # DNS resolution
     - to:
-      - namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: kube-system
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
       ports:
-      - protocol: UDP
-        port: 53
-      - protocol: TCP
-        port: 53
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

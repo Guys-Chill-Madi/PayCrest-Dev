@@ -6,7 +6,6 @@ metadata:
   labels:
     app: api-gateway
 spec:
-  replicas: 4
   selector:
     matchLabels:
       app: api-gateway
@@ -23,11 +22,10 @@ spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchLabels:
-                app: api-gateway
-            topologyKey: "kubernetes.io/hostname"
-              
+            - labelSelector:
+                matchLabels:
+                  app: api-gateway
+              topologyKey: "kubernetes.io/hostname"
       containers:
         - name: api-gateway
           image: chillmadiguys/api-gateway:v1.1.2
@@ -56,4 +54,3 @@ spec:
             limits:
               cpu: "200m"
               memory: "256Mi"
-          

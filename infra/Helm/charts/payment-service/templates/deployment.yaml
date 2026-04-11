@@ -10,9 +10,9 @@ spec:
       app: payment-service
   strategy:
     type: RollingUpdate
-    rollingUpdate: 
+    rollingUpdate:
       maxUnavailable: 1
-      maxSurge: 1    
+      maxSurge: 1
   template:
     metadata:
       labels:
@@ -21,13 +21,13 @@ spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In 
-                values:
-                  - payment-service
-            topologyKey: kubernetes.io/hostname
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - payment-service
+              topologyKey: kubernetes.io/hostname
       containers:
         - name: payment-cont
           image: chillmadiguys/payment-service:v1.1.1
@@ -41,11 +41,11 @@ spec:
                 name: pc-secrets-global
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: "100m"
+              memory: "256Mi"
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: "500m"
+              memory: "512Mi"
           readinessProbe:
             httpGet:
               path: /health
@@ -58,7 +58,3 @@ spec:
               port: 8000
             initialDelaySeconds: 30
             periodSeconds: 10
-
-            
-        
- 
