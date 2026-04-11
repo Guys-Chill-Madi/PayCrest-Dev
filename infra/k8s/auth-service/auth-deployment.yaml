@@ -41,9 +41,9 @@ spec:
               memory: "512Mi"
           envFrom: 
             - secretRef:
-                name: pc-secrets-app
+                name: pc-secrets-global
             - configMapRef:
-                name: pc-config
+                name: pc-config-global
           volumeMounts:
             - name: uploads
               mountPath: /app/uploads
