@@ -38,11 +38,11 @@ spec:
                 name: pc-config
           volumeMounts:
             - name: uploads
-              mountPath: /data/db
+              mountPath: /app/uploads
       volumes:
         - name: uploads
           persistentVolumeClaim:
-            claimName: pvc
+            claimName: admin-pvc
 
                 
 
