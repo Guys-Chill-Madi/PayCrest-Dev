@@ -12,11 +12,11 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: wallet
+      app: verification
   template:
     metadata:
       labels:
-        app: wallet
+        app: verification
     spec:
       affinity:
         podAntiAffinity:
@@ -25,11 +25,11 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: wallet
+                    app: verification
                 topologyKey: "kubernetes.io/hostname"
 
       containers:
-        - name: frontend-wallet-cont
+        - name: frontend-verification-cont
           image: chillmadiguys/wallet-service:v1.1.1
           ports:
             - containerPort: 8000
@@ -45,15 +45,15 @@ spec:
         
           envFrom:
             - configMapRef:
-                name: wallet-configmap
+                name: verification-configmap
             - secretRef:
-                name: wallet-secret
+                name: verification-secret
 
           volumeMounts:
-            - name: wallet-volume
+            - name: verification-volume
               mountPath: /app/uploads
 
       volumes:
-        - name: wallet-volume
+        - name: verification-volume
           persistentVolumeClaim:
-            claimName: wallet-pvc
+            claimName: verification-pvc

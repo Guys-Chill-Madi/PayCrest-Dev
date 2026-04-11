@@ -1,7 +1,7 @@
 apiVersion: v1 
 kind: ConfigMap 
 metadata:
-  name: wallet-configmap 
+  name: verification-configmap 
   namespace: pc-app1
 data: 
   SERVICE_NAME: "manager-service"

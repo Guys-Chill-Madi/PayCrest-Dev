@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: wallet-pvc
+  name: verification-pvc
   namespace: pc-app1
 spec:
-  storageClassName: nfs-csi1
+  storageClassName: nfs-csi12
   accessModes:
     - ReadWriteMany
   resources:
