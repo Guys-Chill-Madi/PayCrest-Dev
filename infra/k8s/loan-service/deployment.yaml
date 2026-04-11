@@ -4,20 +4,30 @@ metadata:
   name: loan-deploy
   namespace: pc-app
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: loan
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 0
+      maxUnavailable: 1
       maxSurge: 1
   template:
     metadata:
       labels:
         app: loan
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - loan
+            topologyKey: "kubernetes.io/hostname"
       containers:
         - name: loan-container
           image: chillmadiguys/loan-service:v1.1.1
@@ -35,9 +45,25 @@ spec:
             limits:
               cpu: "200m"
               memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
           volumeMount:
             - name: loan-volume
-              mountPath: /data/db
+              mountPath: /app/uploads
       volume:
         - name: loan-volume
           persistentVolumeClaim:
