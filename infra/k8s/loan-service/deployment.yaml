@@ -64,7 +64,7 @@ spec:
           volumeMounts:
             - name: loan-volume
               mountPath: /app/uploads
-      volume:
+      volumes:
         - name: loan-volume
           persistentVolumeClaim:
             claimName: loan-pvc
