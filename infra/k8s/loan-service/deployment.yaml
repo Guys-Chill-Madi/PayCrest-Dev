@@ -31,6 +31,7 @@ spec:
       containers:
         - name: loan-container
           image: chillmadiguys/loan-service:v1.1.1
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           envFrom:
@@ -45,22 +46,22 @@ spec:
             limits:
               cpu: "200m"
               memory: "512Gi"
-          # readinessProbe:
-          #   httpGet:
-          #     path: /health
-          #     port: 8000
-          #   initialDelaySeconds: 10
-          #   periodSeconds: 5
-          #   timeoutSeconds: 2
-          #   failureThreshold: 3
-          # livenessProbe:
-          #   httpGet:
-          #     path: /health
-          #     port: 8000
-          #   initialDelaySeconds: 30
-          #   periodSeconds: 10
-          #   timeoutSeconds: 2
-          #   failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
           volumeMounts:
             - name: loan-volume
               mountPath: /app/uploads
