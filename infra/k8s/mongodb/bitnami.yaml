@@ -23,7 +23,11 @@ spec:
   #         db: pycrest
   #       - name: dbAdmin
   #         db: pycrest
+  users:
+  - name: pycrest
+    db: admin
 
+    
   statefulSet:
     spec:
       template:
