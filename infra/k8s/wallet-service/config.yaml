@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap 
 metadata:
   name: wallet-configmap 
-  namespace: pc-app
+  namespace: ppc-config
 data: 
   SERVICE_NAME: "manager-service"
   PORT: "3008" 
