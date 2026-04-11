@@ -26,7 +26,6 @@ spec:
       containers:
         - name: payment-service
           image: chillmadiguys/payment-service:v1.1.1
-
           ports:
             - containerPort: 8000
 
@@ -36,6 +35,26 @@ spec:
             - secretRef:
                 name: payment-service-secret
 
+          ## ✅ READINESS PROBE
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+
+          ## ✅ LIVENESS PROBE
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+
           resources:
             requests:
               cpu: "100m"
@@ -43,3 +62,4 @@ spec:
             limits:
               cpu: "500m"
               memory: "512Mi"
+``
