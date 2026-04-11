@@ -36,9 +36,9 @@ spec:
             - containerPort: 8000
           envFrom:
             - configMapRef:
-                name: loan-configmap
+                name: pc-config
             - secretRef:
-                name: loan-secret
+                name: pc-secrets-app
           resources:
             requests:
               cpu: "100m"
