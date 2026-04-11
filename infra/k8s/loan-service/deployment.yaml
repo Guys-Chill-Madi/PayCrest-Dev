@@ -7,7 +7,7 @@ spec:
   replicas: 2
   selector:
     matchLabels:
-      loan: service
+      app: loan-service
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -16,17 +16,17 @@ spec:
   template:
     metadata:
       labels:
-        loan: service
+        app: loan-service
     spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
               matchExpressions:
-              - key: loan
+              - key: app
                 operator: In
                 values:
-                  - service
+                  - loan-service
             topologyKey: "kubernetes.io/hostname"
       containers:
         - name: loan-container

@@ -5,7 +5,7 @@ metadata:
   namespace: pc-app
 spec:
   selector:
-    loan: service
+    app: loan-service
   ports:
     - port: 8000
       targetPort: 8000

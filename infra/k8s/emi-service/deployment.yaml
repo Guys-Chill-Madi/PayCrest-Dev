@@ -7,7 +7,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      emi: service
+      app: emi-service
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -16,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        emi: service
+        app: emi-service
     spec:
       containers:
         - name: emi-container
