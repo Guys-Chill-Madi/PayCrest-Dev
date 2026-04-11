@@ -4,6 +4,7 @@ metadata:
   name: pvc
   namespace: pc-app
 spec:
+  storageClassName: storage
   accessModes:
     - ReadWriteMany
   resources:
