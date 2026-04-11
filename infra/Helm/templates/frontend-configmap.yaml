@@ -11,10 +11,12 @@ data:
         root /usr/share/nginx/html;
         index index.html;
 
-        # resolver directive defers upstream DNS lookup to request time
-        # instead of nginx startup — prevents crash when api-gateway
-        # is not yet resolvable at container start
-        resolver kube-dns.kube-system.svc.cluster.local valid=10s ipv6=off;
+        # resolver MUST be an IP address — nginx cannot resolve a hostname
+        # for the resolver directive itself. 10.96.0.10 is the kube-dns
+        # ClusterIP on kubeadm clusters (verify: kubectl get svc kube-dns -n kube-system)
+        # Using $api_upstream variable defers upstream DNS to request time,
+        # so nginx does NOT crash at startup if api-gateway is temporarily unavailable.
+        resolver 10.96.0.10 valid=10s ipv6=off;
         set $api_upstream http://api-gateway.pc-edge.svc.cluster.local:3000;
 
         location /health {

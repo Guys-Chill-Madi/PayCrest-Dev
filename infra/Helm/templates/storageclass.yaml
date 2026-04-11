@@ -4,7 +4,7 @@ metadata:
   name: nfs-csi
 provisioner: nfs.csi.k8s.io
 parameters:
-  server: 13.127.63.48
+  server: 13.206.85.84
   share: /var/nfs/paycrest
 reclaimPolicy: Retain
 volumeBindingMode: Immediate

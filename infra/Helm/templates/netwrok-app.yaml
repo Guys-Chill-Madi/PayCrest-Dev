@@ -9,8 +9,7 @@ spec:
     - Ingress
     - Egress
   ingress:
-    # Bug 4 fixed: original had "- from:" as a sibling of the dash, breaking the rule entirely.
-    # Correct structure: each ingress array item is "- from: [...]  ports: [...]"
+    # Allow traffic from api-gateway in pc-edge namespace
     - from:
         - namespaceSelector:
             matchLabels:
@@ -18,13 +17,14 @@ spec:
       ports:
         - protocol: TCP
           port: 8000
-    # Allow inter-service traffic within pc-app (services calling each other internally)
+    # Allow inter-service traffic within pc-app (service-to-service calls)
     - from:
         - podSelector: {}
       ports:
         - protocol: TCP
           port: 8000
   egress:
+    # Allow outbound to MongoDB in pc-data
     - to:
         - namespaceSelector:
             matchLabels:
@@ -32,7 +32,7 @@ spec:
       ports:
         - protocol: TCP
           port: 27017
-    # DNS resolution
+    # Allow DNS resolution via CoreDNS in kube-system
     - to:
         - namespaceSelector:
             matchLabels:
@@ -42,3 +42,9 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+    # Allow inter-service HTTP calls within pc-app
+    - to:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8000
