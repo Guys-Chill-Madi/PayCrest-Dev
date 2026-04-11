@@ -60,7 +60,7 @@ spec:
             - name: mongo-data 
               mountPath: /data/db 
 
-  volumeClaimTemplate:
+  volumeClaimTemplates:
     - metadata:
         name: mongo-data 
       spec:
