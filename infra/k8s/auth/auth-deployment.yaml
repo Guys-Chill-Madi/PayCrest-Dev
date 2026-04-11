@@ -19,6 +19,13 @@ spec:
       labels:
         app: auth
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: auth
+              topologyKey: "kubernetes.io/hostname"
       containers:
         - name: auth-cont
           image: chillmadiguys/auth-service:v1.1.1

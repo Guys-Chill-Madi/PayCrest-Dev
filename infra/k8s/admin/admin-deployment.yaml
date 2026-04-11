@@ -19,6 +19,13 @@ spec:
       labels:
         app: admin
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: admin
+              topologyKey: "kubernetes.io/hostname"
       containers:
         - name: admin-cont
           image: chillmadiguys/admin-service:v1.1.1
