@@ -1,0 +1,8 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: loan-sc
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: 172.31.28.137
+  share: /var/nfs/general/loan

@@ -1,0 +1,12 @@
+apiVersion: storage.k8s.io/v1
+kind: PersistentVolumeClaim
+metadata:
+  name: loan-pvc
+  namespace: pc-app
+spec:
+  storageClassName: loan-sc
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: "2Gi"

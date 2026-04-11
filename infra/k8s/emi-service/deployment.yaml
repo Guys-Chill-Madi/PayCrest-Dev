@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emi-deploy
+  namespace: pc-app
+spec:
+  replicas: 
+  selector:
+    matchLabels:
+      app: emi
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: emi
+    spec:
+      containers:
+        - name: emi-container
+          image: chillmadiguys/emi-service:v1.1.1
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: emi-configmap
+            - secretRef:
+                name: emi-secret 
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "200m"
+              memory: "512Mi"
