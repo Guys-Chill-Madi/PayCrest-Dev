@@ -1,0 +1,44 @@
+apiVersion: v2
+name: pycrest-umbrella
+description: PayCrest LMS — full-stack microservices umbrella chart
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+
+dependencies:
+  - name: common
+    version: "1.0.0"
+    repository: "file://charts/common"
+  - name: mongodb
+    version: "1.0.0"
+    repository: "file://charts/mongodb"
+  - name: api-gateway
+    version: "1.0.0"
+    repository: "file://charts/api-gateway"
+  - name: frontend
+    version: "1.0.0"
+    repository: "file://charts/frontend"
+  - name: admin-service
+    version: "1.0.0"
+    repository: "file://charts/admin-service"
+  - name: auth-service
+    version: "1.0.0"
+    repository: "file://charts/auth-service"
+  - name: emi-service
+    version: "1.0.0"
+    repository: "file://charts/emi-service"
+  - name: loan-service
+    version: "1.0.0"
+    repository: "file://charts/loan-service"
+  - name: manager-service
+    version: "1.0.0"
+    repository: "file://charts/manager-service"
+  - name: payment-service
+    version: "1.0.0"
+    repository: "file://charts/payment-service"
+  - name: verification-service
+    version: "1.0.0"
+    repository: "file://charts/verification-service"
+  - name: wallet-service
+    version: "1.0.0"
+    repository: "file://charts/wallet-service"

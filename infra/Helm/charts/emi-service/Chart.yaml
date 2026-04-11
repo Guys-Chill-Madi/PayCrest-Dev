@@ -1,0 +1,11 @@
+apiVersion: v2
+name: emi-service
+description: >
+  PayCrest EMI Service 
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+dependencies:
+  - name: common
+    version: "1.0.0"
+    repository: "file://../common"
