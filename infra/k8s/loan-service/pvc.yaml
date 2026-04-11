@@ -4,7 +4,7 @@ metadata:
   name: loan-pvc
   namespace: pc-app
 spec:
-  storageClassName: loan-sc
+  storageClassName: nfs-csi
   accessModes:
     - ReadWriteMany
   resources:
