@@ -8,11 +8,11 @@ spec:
   selector:
     matchLabels:
       app: manager-service
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+  # strategy:
+  #   type: RollingUpdate
+  #   rollingUpdate:
+  #     maxUnavailable: 0
+  #     maxSurge: 1
   template:
     metadata:
       labels:
@@ -39,7 +39,7 @@ spec:
             limits:
               cpu: "200m"
               memory: "512Mi"
-              
+
           readinessProbe:
             httpGet:
               path: /health
