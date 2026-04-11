@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend-deployment
-  namespace: pc-app
+  namespace: pc-app1
 spec:
   replicas: 2
   strategy:
