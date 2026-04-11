@@ -2,13 +2,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-deployment
+  name: auth-service
   namespace: pc-app
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: auth
+      app: auth-service
   strategy: # Strategy for deployment
     type: RollingUpdate
     rollingUpdate:
@@ -17,17 +17,17 @@ spec:
   template:
     metadata: 
       labels:
-        app: auth
+        app: auth-service
     spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
                 matchLabels:
-                  app: auth
+                  app: auth-service
               topologyKey: "kubernetes.io/hostname"
       containers:
-        - name: auth-cont
+        - name: auth-service
           image: chillmadiguys/auth-service:v1.1.1
           ports:
             - containerPort: 8000
