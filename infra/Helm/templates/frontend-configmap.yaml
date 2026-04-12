@@ -6,37 +6,18 @@ metadata:
 data:
   default.conf: |
     server {
-        listen 80;
-        server_name _;
-        root /usr/share/nginx/html;
-        index index.html;
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
 
-        # resolver MUST be an IP address — nginx cannot resolve a hostname
-        # for the resolver directive itself. 10.96.0.10 is the kube-dns
-        # ClusterIP on kubeadm clusters (verify: kubectl get svc kube-dns -n kube-system)
-        # Using $api_upstream variable defers upstream DNS to request time,
-        # so nginx does NOT crash at startup if api-gateway is temporarily unavailable.
-        resolver 10.96.0.10 valid=10s ipv6=off;
-        set $api_upstream http://api-gateway.pc-edge.svc.cluster.local:3000;
-
-        location /health {
-            access_log off;
-            return 200 "ok\n";
-            add_header Content-Type text/plain;
-        }
-
-        location /api/ {
-            proxy_pass $api_upstream;
-            proxy_http_version 1.1;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_connect_timeout 10s;
-            proxy_read_timeout 60s;
-        }
-
-        location / {
-            try_files $uri $uri/ /index.html;
-        }
+    location /health {
+        access_log off;
+        return 200 "ok\n";
+        add_header Content-Type text/plain;
     }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
