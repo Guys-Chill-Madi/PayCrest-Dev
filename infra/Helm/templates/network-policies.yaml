@@ -143,7 +143,6 @@ spec:
         - protocol: TCP
           port: 53
 ---
-
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -209,6 +208,19 @@ spec:
       ports:
         - protocol: TCP
           port: 8000
+    # Allow external HTTPS for Cashfree and other payment gateways
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 192.168.0.0/16
+              - 172.16.0.0/12
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
 ---
 
 apiVersion: networking.k8s.io/v1
