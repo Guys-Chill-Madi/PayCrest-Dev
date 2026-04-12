@@ -7,27 +7,29 @@ spec:
   parentRefs:
     - name: paycrest-kgate
   rules:
-    - matches: 
-      - path:
-          type: Exact
-          value: /health
+    - matches:
+        - path:
+            type: Exact
+            value: /health
       backendRefs:
-        - name: frontend
+        - name: frontend-service
           namespace: pc-frontend
           port: 80
+
     - matches:
-        - path: 
+        - path:
             type: PathPrefix
             value: /api
       backendRefs:
         - name: api-gateway
-          port: 3000
           namespace: pc-edge
+          port: 3000
+
     - matches:
-        - path: 
+        - path:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: frontend
-          port: 80
+        - name: frontend-service
           namespace: pc-frontend
+          port: 80

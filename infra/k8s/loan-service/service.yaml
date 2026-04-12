@@ -4,9 +4,9 @@ metadata:
   name: loan-service
   namespace: pc-app
 spec:
+  type: ClusterIP
   selector:
     app: loan-service
   ports:
     - port: 8000
       targetPort: 8000
-  type: ClusterIP
