@@ -1,0 +1,10 @@
+paymentService:
+  image: "chillmadiguys/payment-service:v1.1.1"
+  replicas: 2
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "96Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
