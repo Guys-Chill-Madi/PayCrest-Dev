@@ -8,9 +8,13 @@ spec:
   template:
     spec:
       restartPolicy: Never
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: pc-upload-pvc
       containers:
         - name: create-admin
-          image: <your-auth-service-image>   # same image as auth-service
+          image: chillmadiguys/auth-service:v1.1.1  
           command: ["python", "-c"]
           args:
             - |
@@ -23,24 +27,31 @@ spec:
 
               async def run():
                   db = await get_db()
-                  existing = await db.staff_users.find_one({"email": "admin@paycrest.com"})
+                  existing = await db.staff_users.find_one({"email": "admin@lms.com"})
                   if existing:
-                      print("Admin already exists")
+                      print("Admin already exists, id=" + str(existing.get("_id")))
                       return
                   cust_id = await next_customer_id()
                   doc = {
                       "_id": cust_id,
                       "full_name": "System Admin",
-                      "email": "admin@paycrest.com",
-                      "password": hash_password("YourSecurePassword123!"),
+                      "email": "admin@lms.com",
+                      "password": hash_password("admin123"),
+                      "phone": None,
+                      "dob": None,
+                      "gender": None,
+                      "pan_number": None,
                       "role": Roles.ADMIN.value,
                       "is_active": True,
                       "created_at": datetime.utcnow(),
                   }
                   await db.staff_users.insert_one(doc)
-                  print("Admin created")
+                  print("Admin created successfully, id=" + str(cust_id))
 
               asyncio.run(run())
           envFrom:
             - secretRef:
-                name: app-secrets   # same secret your auth-service uses
+                name: pc-secrets-global  
+          volumeMounts:
+            - mountPath: /app/uploads
+              name: uploads
