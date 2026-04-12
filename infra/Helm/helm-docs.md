@@ -1,5 +1,5 @@
 ﻿# Helm Chart Documentation
-Generated on: 04/12/2026 19:04:06
+Generated on: 04/12/2026 19:40:37
 
 
 ---
@@ -144,6 +144,15 @@ spec:
                   matchLabels:
                     app: api-gateway
                 topologyKey: "kubernetes.io/hostname"
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "2"
+          - name: attempts
+            value: "3"
+          - name: timeout
+            value: "5"
       containers:
         - name: api-gateway
           image: chillmadiguys/api-gateway:v1.1.3
@@ -1378,7 +1387,6 @@ stringData:
   MONGO_INITDB_ROOT_USERNAME: pycrest
   MONGO_INITDB_ROOT_PASSWORD: pycrest123
   MONGO_INITDB_DATABASE: pycrest
-  password: pycrest
 ```
 
 ---
