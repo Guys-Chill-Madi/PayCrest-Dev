@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-admin
+  namespace: pc-app
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: create-admin
+          image: <your-auth-service-image>   # same image as auth-service
+          command: ["python", "-c"]
+          args:
+            - |
+              import asyncio
+              from datetime import datetime
+              from app.database.mongo import get_db
+              from app.core.security import hash_password
+              from app.models.enums import Roles
+              from app.utils.sequences import next_customer_id
+
+              async def run():
+                  db = await get_db()
+                  existing = await db.staff_users.find_one({"email": "admin@paycrest.com"})
+                  if existing:
+                      print("Admin already exists")
+                      return
+                  cust_id = await next_customer_id()
+                  doc = {
+                      "_id": cust_id,
+                      "full_name": "System Admin",
+                      "email": "admin@paycrest.com",
+                      "password": hash_password("YourSecurePassword123!"),
+                      "role": Roles.ADMIN.value,
+                      "is_active": True,
+                      "created_at": datetime.utcnow(),
+                  }
+                  await db.staff_users.insert_one(doc)
+                  print("Admin created")
+
+              asyncio.run(run())
+          envFrom:
+            - secretRef:
+                name: app-secrets   # same secret your auth-service uses
