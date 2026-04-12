@@ -3,64 +3,33 @@ kind: Deployment
 metadata:
   name: auth-service
   namespace: pc-app
+  labels:
+    app: auth-service
+    {{- include "paycrest.labels" . | nindent 4 }}
 spec:
-  replicas: 2
+  replicas: {{ .Values.authService.replicas }}
   selector:
     matchLabels:
       app: auth-service
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
+  {{- include "paycrest.rollingUpdate" . | nindent 2 }}
   template:
     metadata:
       labels:
         app: auth-service
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: auth-service
-                topologyKey: "kubernetes.io/hostname"
+      {{- include "paycrest.antiAffinity" "auth-service" | nindent 6 }}
       containers:
         - name: auth-service
-          image: chillmadiguys/auth-service:v1.1.1
+          image: {{ .Values.authService.image }}
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
           resources:
-            requests:
-              cpu: "100m"
-              memory: "96Mi"
-            limits:
-              cpu: "200m"
-              memory: "512Mi"
+            {{- toYaml .Values.authService.resources | nindent 12 }}
           envFrom:
-            - secretRef:
-                name: pc-secrets-global
-            - configMapRef:
-                name: pc-config-global
+            {{- include "paycrest.appEnvFrom" . | nindent 12 }}
           volumeMounts:
-            - name: uploads
-              mountPath: /app/uploads
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 20
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 10
-            periodSeconds: 10
+            {{- include "paycrest.uploadVolumeMount" . | nindent 12 }}
+          {{- include "paycrest.appProbes" . | nindent 10 }}
       volumes:
-        - name: uploads
-          persistentVolumeClaim:
-            claimName: pc-upload-pvc
+        {{- include "paycrest.uploadVolume" . | nindent 8 }}

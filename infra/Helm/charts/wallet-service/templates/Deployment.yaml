@@ -3,64 +3,33 @@ kind: Deployment
 metadata:
   name: wallet-service
   namespace: pc-app
+  labels:
+    app: wallet-service
+    {{- include "paycrest.labels" . | nindent 4 }}
 spec:
-  replicas: 2
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
+  replicas: {{ .Values.walletService.replicas }}
   selector:
     matchLabels:
       app: wallet-service
+  {{- include "paycrest.rollingUpdate" . | nindent 2 }}
   template:
     metadata:
       labels:
         app: wallet-service
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: wallet-service
-                topologyKey: "kubernetes.io/hostname"
+      {{- include "paycrest.antiAffinity" "wallet-service" | nindent 6 }}
       containers:
         - name: wallet-service-cont
-          image: chillmadiguys/wallet-service:v1.1.1
+          image: {{ .Values.walletService.image }}
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
           resources:
-            requests:
-              cpu: "100m"
-              memory: "96Mi"
-            limits:
-              cpu: "400m"
-              memory: "512Mi"
+            {{- toYaml .Values.walletService.resources | nindent 12 }}
           envFrom:
-            - configMapRef:
-                name: pc-config-global
-            - secretRef:
-                name: pc-secrets-global
+            {{- include "paycrest.appEnvFrom" . | nindent 12 }}
           volumeMounts:
-            - name: wallet-volume
-              mountPath: /app/uploads
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 20
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 10
-            periodSeconds: 10
+            {{- include "paycrest.uploadVolumeMount" . | nindent 12 }}
+          {{- include "paycrest.appProbes" . | nindent 10 }}
       volumes:
-        - name: wallet-volume
-          persistentVolumeClaim:
-            claimName: pc-upload-pvc
+        {{- include "paycrest.uploadVolume" . | nindent 8 }}

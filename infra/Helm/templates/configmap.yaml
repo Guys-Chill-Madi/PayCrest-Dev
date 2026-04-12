@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: pc-config-global
   namespace: pc-app
+  labels:
+    {{- include "paycrest.labels" . | nindent 4 }}
 data:
   UPLOAD_BASE_PATH: "/app/uploads"
   PYTHONDONTWRITEBYTECODE: "1"

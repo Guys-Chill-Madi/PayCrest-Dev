@@ -2,10 +2,12 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: nfs-csi
+  labels:
+    {{- include "paycrest.labels" . | nindent 4 }}
 provisioner: nfs.csi.k8s.io
 parameters:
-  server: 10.0.1.140  
-  share: /var/nfs/paycrest
+  server: {{ .Values.nfs.server | quote }}
+  share: {{ .Values.nfs.share | quote }}
 reclaimPolicy: Retain
 volumeBindingMode: Immediate
 mountOptions:

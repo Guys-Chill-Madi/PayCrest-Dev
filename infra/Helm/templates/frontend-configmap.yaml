@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: frontend-nginx-config
   namespace: pc-frontend
+  labels:
+    {{- include "paycrest.labels" . | nindent 4 }}
 data:
   default.conf: |
     server {

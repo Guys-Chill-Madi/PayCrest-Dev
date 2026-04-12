@@ -5,30 +5,18 @@ metadata:
   namespace: pc-edge
   labels:
     app: api-gateway
+    {{- include "paycrest.labels" . | nindent 4 }}
 spec:
-  # No static replicas — HPA owns replica count (min:2 max:4)
   selector:
     matchLabels:
       app: api-gateway
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
+  {{- include "paycrest.rollingUpdate" . | nindent 2 }}
   template:
     metadata:
       labels:
         app: api-gateway
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: api-gateway
-                topologyKey: "kubernetes.io/hostname"
+      {{- include "paycrest.antiAffinity" "api-gateway" | nindent 6 }}
       dnsPolicy: ClusterFirst
       dnsConfig:
         options:
@@ -40,7 +28,7 @@ spec:
             value: "5"
       containers:
         - name: api-gateway
-          image: chillmadiguys/api-gateway:v1.1.3
+          image: {{ .Values.apiGateway.image }}
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -53,16 +41,13 @@ spec:
               port: 3000
             initialDelaySeconds: 15
             periodSeconds: 30
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /health
               port: 3000
             initialDelaySeconds: 10
             periodSeconds: 10
+            failureThreshold: 3
           resources:
-            requests:
-              cpu: "100m"
-              memory: "96Mi"
-            limits:
-              cpu: "200m"
-              memory: "256Mi"
+            {{- toYaml .Values.apiGateway.resources | nindent 12 }}

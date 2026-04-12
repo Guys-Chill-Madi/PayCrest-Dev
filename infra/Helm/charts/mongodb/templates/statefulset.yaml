@@ -3,6 +3,9 @@ kind: StatefulSet
 metadata:
   name: mongodb
   namespace: pc-data
+  labels:
+    app: mongodb
+    {{- include "paycrest.labels" . | nindent 4 }}
 spec:
   replicas: 1
   serviceName: mongodb
@@ -16,16 +19,12 @@ spec:
     spec:
       containers:
         - name: mongodb
-          image: mongo:7.0
+          image: {{ .Values.mongodb.image }}
+          imagePullPolicy: Always
           ports:
             - containerPort: 27017
           resources:
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "500m"
-              memory: "512Mi"
+            {{- toYaml .Values.mongodb.resources | nindent 12 }}
           env:
             - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
@@ -54,4 +53,4 @@ spec:
         storageClassName: nfs-csi
         resources:
           requests:
-            storage: 10Gi
+            storage: {{ .Values.mongodb.storage }}

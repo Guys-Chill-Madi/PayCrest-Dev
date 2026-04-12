@@ -3,64 +3,33 @@ kind: Deployment
 metadata:
   name: verification-service
   namespace: pc-app
+  labels:
+    app: verification-service
+    {{- include "paycrest.labels" . | nindent 4 }}
 spec:
-  replicas: 2
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
+  replicas: {{ .Values.verificationService.replicas }}
   selector:
     matchLabels:
       app: verification-service
+  {{- include "paycrest.rollingUpdate" . | nindent 2 }}
   template:
     metadata:
       labels:
         app: verification-service
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: verification-service
-                topologyKey: "kubernetes.io/hostname"
+      {{- include "paycrest.antiAffinity" "verification-service" | nindent 6 }}
       containers:
         - name: verification-service-cont
-          image: chillmadiguys/verification-service:v1.1.1
+          image: {{ .Values.verificationService.image }}
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
           resources:
-            requests:
-              cpu: "100m"
-              memory: "96Mi"
-            limits:
-              cpu: "400m"
-              memory: "512Mi"
+            {{- toYaml .Values.verificationService.resources | nindent 12 }}
           envFrom:
-            - configMapRef:
-                name: pc-config-global
-            - secretRef:
-                name: pc-secrets-global
+            {{- include "paycrest.appEnvFrom" . | nindent 12 }}
           volumeMounts:
-            - name: verification-service-volume
-              mountPath: /app/uploads
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 20
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 10
-            periodSeconds: 10
+            {{- include "paycrest.uploadVolumeMount" . | nindent 12 }}
+          {{- include "paycrest.appProbes" . | nindent 10 }}
       volumes:
-        - name: verification-service-volume
-          persistentVolumeClaim:
-            claimName: pc-upload-pvc
+        {{- include "paycrest.uploadVolume" . | nindent 8 }}

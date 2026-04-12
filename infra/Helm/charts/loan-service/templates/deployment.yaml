@@ -3,63 +3,32 @@ kind: Deployment
 metadata:
   name: loan-service
   namespace: pc-app
+  labels:
+    app: loan-service
+    {{- include "paycrest.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
       app: loan-service
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
+  {{- include "paycrest.rollingUpdate" . | nindent 2 }}
   template:
     metadata:
       labels:
         app: loan-service
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: loan-service
-                topologyKey: "kubernetes.io/hostname"
+      {{- include "paycrest.antiAffinity" "loan-service" | nindent 6 }}
       containers:
         - name: loan-container
-          image: chillmadiguys/loan-service:v1.1.1
+          image: {{ .Values.loanService.image }}
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
           resources:
-            requests:
-              cpu: "100m"
-              memory: "96Mi"
-            limits:
-              cpu: "200m"
-              memory: "512Mi"
+            {{- toYaml .Values.loanService.resources | nindent 12 }}
           envFrom:
-            - configMapRef:
-                name: pc-config-global
-            - secretRef:
-                name: pc-secrets-global
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 10
-            periodSeconds: 5
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 30
-            periodSeconds: 10
+            {{- include "paycrest.appEnvFrom" . | nindent 12 }}
           volumeMounts:
-            - name: loan-volume
-              mountPath: /app/uploads
+            {{- include "paycrest.uploadVolumeMount" . | nindent 12 }}
+          {{- include "paycrest.appProbes" . | nindent 10 }}
       volumes:
-        - name: loan-volume
-          persistentVolumeClaim:
-            claimName: pc-upload-pvc
+        {{- include "paycrest.uploadVolume" . | nindent 8 }}

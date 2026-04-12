@@ -5,64 +5,31 @@ metadata:
   namespace: pc-app
   labels:
     app: admin-service
+    {{- include "paycrest.labels" . | nindent 4 }}
 spec:
-  replicas: 2
+  replicas: {{ .Values.adminService.replicas }}
   selector:
     matchLabels:
       app: admin-service
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
+  {{- include "paycrest.rollingUpdate" . | nindent 2 }}
   template:
     metadata:
       labels:
         app: admin-service
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: admin-service
-                topologyKey: "kubernetes.io/hostname"
+      {{- include "paycrest.antiAffinity" "admin-service" | nindent 6 }}
       containers:
         - name: admin-service
-          image: chillmadiguys/admin-service:v1.1.1
+          image: {{ .Values.adminService.image }}
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
           resources:
-            requests:
-              cpu: "100m"
-              memory: "96Mi"
-            limits:
-              cpu: "200m"
-              memory: "512Mi"
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 15
-            periodSeconds: 20
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 5
-            periodSeconds: 10
+            {{- toYaml .Values.adminService.resources | nindent 12 }}
           envFrom:
-            - configMapRef:
-                name: pc-config-global
-            - secretRef:
-                name: pc-secrets-global
+            {{- include "paycrest.appEnvFrom" . | nindent 12 }}
           volumeMounts:
-            - name: uploads
-              mountPath: /app/uploads
+            {{- include "paycrest.uploadVolumeMount" . | nindent 12 }}
+          {{- include "paycrest.appProbes" . | nindent 10 }}
       volumes:
-        - name: uploads
-          persistentVolumeClaim:
-            claimName: pc-upload-pvc
+        {{- include "paycrest.uploadVolume" . | nindent 8 }}

@@ -3,26 +3,28 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: frontend-service-hpa
   namespace: pc-frontend
+  labels:
+    {{- include "paycrest.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: frontend
-  minReplicas: 1
-  maxReplicas: 2
+  minReplicas: {{ .Values.frontend.hpa.minReplicas }}
+  maxReplicas: {{ .Values.frontend.hpa.maxReplicas }}
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 70
+          averageUtilization: {{ .Values.frontend.hpa.cpuUtilization }}
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
-          averageUtilization: 70
+          averageUtilization: {{ .Values.frontend.hpa.memoryUtilization }}
   behavior:
     scaleDown:
       stabilizationWindowSeconds: 120

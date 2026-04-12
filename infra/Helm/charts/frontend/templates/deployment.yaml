@@ -3,6 +3,9 @@ kind: Deployment
 metadata:
   name: frontend
   namespace: pc-frontend
+  labels:
+    app: frontend
+    {{- include "paycrest.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
@@ -10,7 +13,7 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 0   
+      maxUnavailable: 0
       maxSurge: 1
   template:
     metadata:
@@ -19,7 +22,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: chillmadiguys/frontend:v1.1.1
+          image: {{ .Values.frontend.image }}
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -43,12 +46,7 @@ spec:
             periodSeconds: 10
             failureThreshold: 3
           resources:
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "200m"
-              memory: "256Mi"
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
       volumes:
         - name: nginx-config
           configMap:

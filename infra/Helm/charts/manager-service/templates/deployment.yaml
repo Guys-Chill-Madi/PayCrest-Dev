@@ -3,11 +3,15 @@ kind: Deployment
 metadata:
   name: manager-service
   namespace: pc-app
+  labels:
+    app: manager-service
+    {{- include "paycrest.labels" . | nindent 4 }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.managerService.replicas }}
   selector:
     matchLabels:
       app: manager-service
+  {{- include "paycrest.rollingUpdate" . | nindent 2 }}
   template:
     metadata:
       labels:
@@ -15,38 +19,16 @@ spec:
     spec:
       containers:
         - name: manager-service
-          image: chillmadiguys/manager-service:v1.1.1
+          image: {{ .Values.managerService.image }}
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
           resources:
-            requests:
-              cpu: "100m"
-              memory: "96Mi"
-            limits:
-              cpu: "200m"
-              memory: "512Mi"
+            {{- toYaml .Values.managerService.resources | nindent 12 }}
           envFrom:
-            - configMapRef:
-                name: pc-config-global
-            - secretRef:
-                name: pc-secrets-global
+            {{- include "paycrest.appEnvFrom" . | nindent 12 }}
           volumeMounts:
-            - name: manager-volume
-              mountPath: /app/uploads
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 10
-            periodSeconds: 5
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 30
-            periodSeconds: 10
+            {{- include "paycrest.uploadVolumeMount" . | nindent 12 }}
+          {{- include "paycrest.appProbes" . | nindent 10 }}
       volumes:
-        - name: manager-volume
-          persistentVolumeClaim:
-            claimName: pc-upload-pvc
+        {{- include "paycrest.uploadVolume" . | nindent 8 }}
