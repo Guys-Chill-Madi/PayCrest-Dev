@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emi-service
+  namespace: pc-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emi-service
+  template:
+    metadata:
+      labels:
+        app: emi-service
+    spec:
+      containers:
+        - name: emi-container
+          image: chillmadiguys/emi-service:v1.1.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "96Mi"
+            limits:
+              cpu: "200m"
+              memory: "512Mi"
+          envFrom:
+            - configMapRef:
+                name: pc-config-global
+            - secretRef:
+                name: pc-secrets-global
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10

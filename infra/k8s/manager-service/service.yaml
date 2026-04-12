@@ -1,11 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: admin-service
+  name: manager-service
   namespace: pc-app
 spec:
+  type: ClusterIP
   selector:
-    app: admin-service
+    app: manager-service
   ports:
     - port: 8000
       targetPort: 8000

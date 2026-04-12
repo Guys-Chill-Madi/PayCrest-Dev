@@ -1,0 +1,23 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata: 
+  name: paycrest-kgate
+  namespace: pc-gateway
+spec:
+  gatewayClassName: kgateway
+  listeners:
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchExpressions:
+              - key: "kubernetes.io/metadata.name"
+                operator: In
+                values:
+                  - pc-frontend
+                  - pc-edge
+                  - pc-gateway
+          

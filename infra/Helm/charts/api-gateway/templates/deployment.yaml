@@ -6,6 +6,7 @@ metadata:
   labels:
     app: api-gateway
 spec:
+  # No static replicas — HPA owns replica count (min:2 max:4)
   selector:
     matchLabels:
       app: api-gateway

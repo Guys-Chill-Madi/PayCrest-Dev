@@ -1,14 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api-gateway
-  namespace: pc-edge
-  labels:
-    app: api-gateway
+  name: auth-service
+  namespace: pc-app
 spec:
+  replicas: 2
   selector:
     matchLabels:
-      app: api-gateway
+      app: auth-service
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -17,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        app: api-gateway
+        app: auth-service
     spec:
       affinity:
         podAntiAffinity:
@@ -26,42 +25,42 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: api-gateway
+                    app: auth-service
                 topologyKey: "kubernetes.io/hostname"
-      dnsPolicy: ClusterFirst
-      dnsConfig:
-        options:
-          - name: ndots
-            value: "2"
-          - name: attempts
-            value: "3"
-          - name: timeout
-            value: "5"
       containers:
-        - name: api-gateway
-          image: chillmadiguys/api-gateway:v1.1.3
+        - name: auth-service
+          image: chillmadiguys/auth-service:v1.1.1
           imagePullPolicy: Always
           ports:
-            - containerPort: 3000
-          envFrom:
-            - secretRef:
-                name: pc-secret-api
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 3000
-            initialDelaySeconds: 15
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 3000
-            initialDelaySeconds: 10
-            periodSeconds: 10
+            - containerPort: 8000
           resources:
             requests:
               cpu: "100m"
               memory: "96Mi"
             limits:
               cpu: "200m"
-              memory: "256Mi"
+              memory: "512Mi"
+          envFrom:
+            - secretRef:
+                name: pc-secrets-global
+            - configMapRef:
+                name: pc-config-global
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: pc-upload-pvc
