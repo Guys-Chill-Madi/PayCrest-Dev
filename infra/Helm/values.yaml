@@ -1,9 +1,9 @@
-# ── NFS Storage ───────────────────────────────────────────────
+
 nfs:
   server: "10.0.1.140"
   share: "/var/nfs/paycrest"
 
-# ── MongoDB ───────────────────────────────────────────────────
+
 mongodb:
   image: "mongo:7.0"
   storage: "10Gi"
@@ -19,7 +19,7 @@ mongodb:
       cpu: "500m"
       memory: "512Mi"
 
-# ── Shared app secrets ────────────────────────────────────────
+
 appSecrets:
   mongodbUri: "mongodb://pycrest:pycrest123@mongodb-0.mongodb.pc-data.svc.cluster.local:27017/pycrest?authSource=admin"
   mongodbDb: "pycrest"
@@ -28,7 +28,7 @@ appSecrets:
   jwtExpireMinutes: "60"
   internalServiceToken: "e9ccbcbfd93e305d56e67a751664bd4b79ed32b23a896cc71958b98008f0fbcb"
 
-# ── API Gateway ───────────────────────────────────────────────
+
 apiGateway:
   image: "chillmadiguys/api-gateway:v1.1.3"
   port: "3000"
@@ -48,7 +48,7 @@ apiGateway:
       cpu: "200m"
       memory: "256Mi"
 
-# ── Frontend ──────────────────────────────────────────────────
+
 frontend:
   image: "chillmadiguys/frontend:v1.1.1"
   hpa:
@@ -64,7 +64,7 @@ frontend:
       cpu: "200m"
       memory: "256Mi"
 
-# ── Admin Service ─────────────────────────────────────────────
+
 adminService:
   image: "chillmadiguys/admin-service:v1.1.1"
   replicas: 2
@@ -76,7 +76,7 @@ adminService:
       cpu: "200m"
       memory: "512Mi"
 
-# ── Auth Service ──────────────────────────────────────────────
+
 authService:
   image: "chillmadiguys/auth-service:v1.1.1"
   replicas: 2
@@ -88,7 +88,7 @@ authService:
       cpu: "200m"
       memory: "512Mi"
 
-# ── EMI Service ───────────────────────────────────────────────
+
 emiService:
   image: "chillmadiguys/emi-service:v1.1.1"
   replicas: 1
@@ -100,7 +100,7 @@ emiService:
       cpu: "200m"
       memory: "512Mi"
 
-# ── Loan Service ──────────────────────────────────────────────
+
 loanService:
   image: "chillmadiguys/loan-service:v1.1.1"
   hpa:
@@ -116,7 +116,7 @@ loanService:
       cpu: "200m"
       memory: "512Mi"
 
-# ── Manager Service ───────────────────────────────────────────
+
 managerService:
   image: "chillmadiguys/manager-service:v1.1.1"
   replicas: 1
@@ -128,7 +128,7 @@ managerService:
       cpu: "200m"
       memory: "512Mi"
 
-# ── Payment Service ───────────────────────────────────────────
+
 paymentService:
   image: "chillmadiguys/payment-service:v1.1.1"
   replicas: 2
@@ -140,7 +140,7 @@ paymentService:
       cpu: "500m"
       memory: "512Mi"
 
-# ── Verification Service ──────────────────────────────────────
+
 verificationService:
   image: "chillmadiguys/verification-service:v1.1.1"
   replicas: 2
@@ -152,7 +152,7 @@ verificationService:
       cpu: "400m"
       memory: "512Mi"
 
-# ── Wallet Service ────────────────────────────────────────────
+
 walletService:
   image: "chillmadiguys/wallet-service:v1.1.1"
   replicas: 2
