@@ -1,6 +1,0 @@
-apiVersion: v2
-name: mongodb
-description: MongoDB Database
-type: application
-version: 1.0.0
-appVersion: "7.0"

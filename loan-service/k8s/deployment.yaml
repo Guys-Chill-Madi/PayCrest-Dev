@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loan-service
+  namespace: pc-app
+spec:
+  selector:
+    matchLabels:
+      app: loan-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: loan-service
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: loan-service
+                topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: loan-container
+          image: chillmadiguys/loan-service:v1.1.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "96Mi"
+            limits:
+              cpu: "200m"
+              memory: "512Mi"
+          envFrom:
+            - configMapRef:
+                name: pc-config-global
+            - secretRef:
+                name: pc-secrets-global
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          volumeMounts:
+            - name: loan-volume
+              mountPath: /app/uploads
+      volumes:
+        - name: loan-volume
+          persistentVolumeClaim:
+            claimName: pc-upload-pvc

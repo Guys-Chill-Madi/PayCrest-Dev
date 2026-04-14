@@ -1,6 +1,6 @@
 apiVersion: v2
-name: frontend
-description: PayCrest Frontend
+name: admin-service
+description: PayCrest Admin Service
 type: application
 version: 1.0.0
 appVersion: "1.0.0"

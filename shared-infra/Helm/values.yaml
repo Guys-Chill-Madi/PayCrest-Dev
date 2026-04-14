@@ -1,0 +1,17 @@
+nfs:
+  server: "10.0.1.140"
+  share: "/var/nfs/paycrest"
+
+appSecrets:
+  mongodbUri: "mongodb://pycrest:pycrest123@mongodb-0.mongodb.pc-data.svc.cluster.local:27017/pycrest?authSource=admin"
+  mongodbDb: "pycrest"
+  jwtSecret: "pycrest_jwt_secret_devops_2024"
+  jwtAlgorithm: "HS256"
+  jwtExpireMinutes: "60"
+  internalServiceToken: "e9ccbcbfd93e305d56e67a751664bd4b79ed32b23a896cc71958b98008f0fbcb"
+
+apiSecrets:
+  jwtSecret: "pycrest_jwt_secret_devops_2024"
+  jwtAlgorithm: "HS256"
+  port: "3000"
+  internalServiceToken: "e9ccbcbfd93e305d56e67a751664bd4b79ed32b23a896cc71958b98008f0fbcb"

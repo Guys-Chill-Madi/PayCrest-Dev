@@ -1,0 +1,14 @@
+mongodb:
+  image: "mongo:7.0"
+  storage: "10Gi"
+  credentials:
+    username: "pycrest"
+    password: "pycrest123"
+    database: "pycrest"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"

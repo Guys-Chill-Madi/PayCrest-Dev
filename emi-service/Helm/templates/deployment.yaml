@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emi-service
+  namespace: pc-app
+  labels:
+    app: emi-service
+    {{- include "paycrest.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.emiService.replicas }}
+  selector:
+    matchLabels:
+      app: emi-service
+  {{- include "paycrest.rollingUpdate" . | nindent 2 }}
+  template:
+    metadata:
+      labels:
+        app: emi-service
+    spec:
+      containers:
+        - name: emi-container
+          image: {{ .Values.emiService.image }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            {{- toYaml .Values.emiService.resources | nindent 12 }}
+          envFrom:
+            {{- include "paycrest.appEnvFrom" . | nindent 12 }}
+          {{- include "paycrest.appProbes" . | nindent 10 }}

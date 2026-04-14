@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: verification-service
+  namespace: pc-app
+  labels:
+    app: verification-service
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  replicas: {{ .Values.verificationService.replicas }}
+  selector:
+    matchLabels:
+      app: verification-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: verification-service
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: verification-service
+                topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: verification-service-cont
+          image: {{ .Values.verificationService.image }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            {{- toYaml .Values.verificationService.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: pc-config-global
+            - secretRef:
+                name: pc-secrets-global
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: pc-upload-pvc
