@@ -4,10 +4,9 @@ metadata:
   name: emi-service
   namespace: pc-app
 spec:
+  type: ClusterIP
   selector:
     app: emi-service
   ports:
     - port: 8000
       targetPort: 8000
-  type: ClusterIP
-

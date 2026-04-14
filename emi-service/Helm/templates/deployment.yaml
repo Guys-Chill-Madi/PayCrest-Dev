@@ -5,13 +5,18 @@ metadata:
   namespace: pc-app
   labels:
     app: emi-service
-    {{- include "paycrest.labels" . | nindent 4 }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 spec:
   replicas: {{ .Values.emiService.replicas }}
   selector:
     matchLabels:
       app: emi-service
-  {{- include "paycrest.rollingUpdate" . | nindent 2 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   template:
     metadata:
       labels:
@@ -26,5 +31,21 @@ spec:
           resources:
             {{- toYaml .Values.emiService.resources | nindent 12 }}
           envFrom:
-            {{- include "paycrest.appEnvFrom" . | nindent 12 }}
-          {{- include "paycrest.appProbes" . | nindent 10 }}
+            - configMapRef:
+                name: pc-config-global
+            - secretRef:
+                name: pc-secrets-global
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
