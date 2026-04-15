@@ -1,0 +1,14 @@
+apiGateway:
+  image: "chillmadiguys/api-gateway:v1.1.3"
+  hpa:
+    minReplicas: 2
+    maxReplicas: 4
+    cpuUtilization: 70
+    memoryUtilization: 80
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "96Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"

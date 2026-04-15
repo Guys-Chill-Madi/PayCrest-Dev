@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: pc-app
+  labels:
+    app: payment-service
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  replicas: {{ .Values.paymentService.replicas }}
+  selector:
+    matchLabels:
+      app: payment-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: payment-service
+                topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: payment-cont
+          image: {{ .Values.paymentService.image }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            {{- toYaml .Values.paymentService.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: pc-config-global
+            - secretRef:
+                name: pc-secrets-global
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
