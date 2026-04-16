@@ -81,12 +81,15 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
       - name: Snyk Node Scan
-        uses: snyk/actions/node@master
+        run: |
+          cd ${{ inputs.service }}
+          snyk test --severity-threshold=high --file=package.json
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high --file=${{ inputs.service }}/package.json
 
       - name: Build image for Trivy
         run: docker build -t ${{ inputs.image }}:scan-${{ github.sha }} ./${{ inputs.service }}
