@@ -1,0 +1,20 @@
+name: Maintenance CI
+
+on:
+  pull_request:
+    branches: [test, master]
+    paths:
+      - 'infra/**'
+      - 'shared-infra/**'
+      - 'monitoring/**'
+      - 'scripts/**'
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_ci-maintenance.yml
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_INFRA }}
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+      DEVELOPMENT_TEAM_EMAIL: ${{ secrets.DEVELOPMENT_TEAM_EMAIL }}

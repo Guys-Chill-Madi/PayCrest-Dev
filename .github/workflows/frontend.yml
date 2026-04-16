@@ -1,0 +1,25 @@
+name: Frontend CI/CD
+
+on:
+  pull_request:
+    branches: [test, master]
+    paths: ['frontend/**']
+  push:
+    branches: [test]
+    paths: ['frontend/**']
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_ci-frontend.yml
+    with:
+      service: frontend
+      image: chillmadiguys/frontend
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+      DEVELOPMENT_TEAM_EMAIL: ${{ secrets.DEVELOPMENT_TEAM_EMAIL }}
