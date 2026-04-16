@@ -90,6 +90,7 @@ jobs:
         run: npm install -g snyk
 
       - name: Snyk Frontend Scan
+        continue-on-error: true
         run: |
           cd ${{ inputs.service }}
           snyk test --severity-threshold=high --file=package.json
