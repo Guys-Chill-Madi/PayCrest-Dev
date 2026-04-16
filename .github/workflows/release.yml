@@ -19,18 +19,12 @@ jobs:
       - name: Parse release tag
         run: |
           TAG="${{ github.event.release.tag_name }}"
-
-          # Tag must follow: service-name-vX.Y.Z
-          # Examples: loan-service-v1.2.0, api-gateway-v1.1.3, frontend-v2.0.0
           if [[ ! "$TAG" =~ ^(.+)-(v[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             echo "::error::Tag must follow format: service-name-vX.Y.Z"
-            echo "::error::Examples: loan-service-v1.2.0, frontend-v2.0.0, api-gateway-v1.1.0"
             exit 1
           fi
-
           SERVICE="${BASH_REMATCH[1]}"
           VERSION="${BASH_REMATCH[2]}"
-
           echo "SERVICE=$SERVICE" >> $GITHUB_ENV
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "IMAGE=chillmadiguys/$SERVICE" >> $GITHUB_ENV
@@ -41,8 +35,6 @@ jobs:
           VALID="loan-service auth-service admin-service payment-service verification-service wallet-service emi-service manager-service api-gateway frontend"
           if ! echo "$VALID" | grep -qw "${{ env.SERVICE }}"; then
             echo "::error::Unknown service '${{ env.SERVICE }}'"
-            echo "::error::Valid services: $VALID"
-            echo "::error::Tag format: service-name-vX.Y.Z e.g. loan-service-v1.2.0"
             exit 1
           fi
           echo "Service validated: ${{ env.SERVICE }}"
@@ -61,7 +53,6 @@ jobs:
             api-gateway)          echo "HELM_KEY=apiGateway" >> $GITHUB_ENV ;;
             frontend)             echo "HELM_KEY=frontend" >> $GITHUB_ENV ;;
           esac
-          echo "HELM_KEY set for ${{ env.SERVICE }}"
 
       - name: Get SHA from test branch
         run: |
@@ -69,7 +60,6 @@ jobs:
           SHA=$(git show origin/test:${{ env.SERVICE }}/.last-sha 2>/dev/null | tr -d '[:space:]')
           if [ -z "$SHA" ] || [ "$SHA" = "initial" ]; then
             echo "::error::No valid SHA found for ${{ env.SERVICE }}"
-            echo "::error::Make sure code has been merged to test branch first so a SHA image exists"
             exit 1
           fi
           echo "SHA=$SHA" >> $GITHUB_ENV
@@ -83,7 +73,6 @@ jobs:
 
       - name: Pull SHA image
         run: |
-          echo "Pulling ${{ env.IMAGE }}:${{ env.SHA }}"
           docker pull ${{ env.IMAGE }}:${{ env.SHA }}
 
       - name: Trivy scan before release
@@ -100,23 +89,18 @@ jobs:
           docker tag ${{ env.IMAGE }}:${{ env.SHA }} ${{ env.IMAGE }}:latest
           docker push ${{ env.IMAGE }}:${{ env.VERSION }}
           docker push ${{ env.IMAGE }}:latest
-          echo "✅ Pushed ${{ env.IMAGE }}:${{ env.VERSION }}"
-          echo "✅ Pushed ${{ env.IMAGE }}:latest"
 
       - name: Install yq
         run: |
           sudo wget -qO /usr/local/bin/yq \
             https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
-          yq --version
 
       - name: Update standalone service Helm values.yaml
         run: |
           FILE="${{ env.SERVICE }}/Helm/values.yaml"
-          echo "Updating $FILE"
           yq -i '.image = "${{ env.IMAGE }}:${{ env.VERSION }}"' "$FILE"
           echo "✅ Updated $FILE"
-          grep image "$FILE"
 
       - name: Update all 7 infra/Helm values files
         run: |
@@ -129,10 +113,8 @@ jobs:
             "infra/Helm/values-surya.yaml"
             "infra/Helm/values-thanu.yaml"
           )
-
           for FILE in "${FILES[@]}"; do
             if [ -f "$FILE" ]; then
-              echo "Updating $FILE → .${{ env.HELM_KEY }}.image"
               yq -i '.${{ env.HELM_KEY }}.image = "${{ env.IMAGE }}:${{ env.VERSION }}"' "$FILE"
               echo "✅ Done: $FILE"
             else
@@ -140,10 +122,13 @@ jobs:
             fi
           done
 
-      - name: Commit and push to master
+      - name: Commit and push via release branch
         run: |
           git config user.email "devops@paycrest.com"
           git config user.name "PayCrest DevOps Bot"
+
+          BRANCH="release/${{ env.SERVICE }}-${{ env.VERSION }}"
+          git checkout -b $BRANCH
 
           git add \
             ${{ env.SERVICE }}/Helm/values.yaml \
@@ -158,12 +143,29 @@ jobs:
           git diff --staged --quiet && echo "No changes to commit" && exit 0
 
           git commit -m "release: ${{ env.SERVICE }} → ${{ env.VERSION }} [skip ci]"
-          git push origin master
-          echo "✅ Committed and pushed to master"
-          echo "ArgoCD will detect this change and sync the cluster automatically"
+          git push origin $BRANCH
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
 
-      - name: Send release notification
-        if: always()
+      - name: Auto-merge PR to master
+        run: |
+          gh pr create \
+            --title "release: ${{ env.SERVICE }} → ${{ env.VERSION }}" \
+            --body "Automated release — updates Helm image tags to ${{ env.VERSION }}" \
+            --base master \
+            --head ${{ env.BRANCH }}
+
+          gh pr merge ${{ env.BRANCH }} \
+            --merge \
+            --admin \
+            --delete-branch
+
+          echo "✅ Merged to master successfully"
+          echo "MERGED=true" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+
+      - name: Send SUCCESS notification
+        if: success()
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
@@ -172,11 +174,11 @@ jobs:
           password: ${{ secrets.MAIL_PASSWORD }}
           to: ${{ secrets.DEVELOPMENT_TEAM_EMAIL }}
           from: PayCrest DevOps <${{ secrets.MAIL_USERNAME }}>
-          subject: "${{ job.status == 'success' && '🚀 Released' || '❌ Release Failed' }}: ${{ env.SERVICE }} ${{ env.VERSION }}"
+          subject: "🚀 Released: ${{ env.SERVICE }} ${{ env.VERSION }}"
           html_body: |
             <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #ddd;border-radius:8px;overflow:hidden">
-              <div style="background:${{ job.status == 'success' && '#5cb85c' || '#d9534f' }};color:white;padding:20px">
-                <h2 style="margin:0">${{ job.status == 'success' && '🚀 Release Successful' || '❌ Release Failed' }}</h2>
+              <div style="background:#5cb85c;color:white;padding:20px">
+                <h2 style="margin:0">🚀 Release Successful</h2>
                 <p style="margin:6px 0 0;opacity:0.9">${{ env.SERVICE }} ${{ env.VERSION }}</p>
               </div>
               <div style="padding:20px">
@@ -201,12 +203,8 @@ jobs:
                     <td style="padding:8px;color:#6c757d">Released By</td>
                     <td style="padding:8px">${{ github.actor }}</td>
                   </tr>
-                  <tr style="border-bottom:1px solid #eee">
-                    <td style="padding:8px;color:#6c757d">Helm Key</td>
-                    <td style="padding:8px;font-family:monospace">${{ env.HELM_KEY }}.image</td>
-                  </tr>
                   <tr>
-                    <td style="padding:8px;color:#6c757d">Values Updated</td>
+                    <td style="padding:8px;color:#6c757d">Helm Values Updated</td>
                     <td style="padding:8px;font-size:12px">
                       ${{ env.SERVICE }}/Helm/values.yaml<br>
                       infra/Helm/values.yaml<br>
@@ -221,8 +219,8 @@ jobs:
                 </table>
                 <div style="background:#d4edda;border:1px solid #c3e6cb;border-radius:4px;padding:12px 16px;margin-top:16px">
                   <p style="margin:0;color:#155724;font-size:14px">
-                    ✅ All Helm values.yaml files updated on master.<br>
-                    ArgoCD will detect the change and sync <strong>${{ env.SERVICE }}</strong> in the cluster automatically within 3 minutes.
+                    ✅ All Helm values.yaml files committed and merged to master.<br>
+                    ArgoCD will detect the change and sync <strong>${{ env.SERVICE }}</strong> automatically within 3 minutes.
                   </p>
                 </div>
                 <div style="text-align:center;margin-top:20px">
@@ -235,4 +233,54 @@ jobs:
               <div style="background:#f8f9fa;padding:10px 20px;border-top:1px solid #dee2e6;text-align:center">
                 <p style="margin:0;font-size:12px;color:#6c757d">PayCrest DevOps • ${{ github.repository }}</p>
               </div>
-            </div> 
+            </div>
+
+      - name: Send FAILURE notification
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          to: ${{ secrets.DEVELOPMENT_TEAM_EMAIL }}
+          from: PayCrest DevOps <${{ secrets.MAIL_USERNAME }}>
+          subject: "❌ Release Failed: ${{ env.SERVICE }} ${{ env.VERSION }}"
+          html_body: |
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #ddd;border-radius:8px;overflow:hidden">
+              <div style="background:#d9534f;color:white;padding:20px">
+                <h2 style="margin:0">❌ Release Failed</h2>
+                <p style="margin:6px 0 0;opacity:0.9">${{ env.SERVICE }} ${{ env.VERSION }}</p>
+              </div>
+              <div style="padding:20px">
+                <table style="width:100%;border-collapse:collapse;font-size:14px">
+                  <tr style="border-bottom:1px solid #eee">
+                    <td style="padding:8px;color:#6c757d;width:160px">Service</td>
+                    <td style="padding:8px;font-weight:bold">${{ env.SERVICE }}</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #eee">
+                    <td style="padding:8px;color:#6c757d">Version</td>
+                    <td style="padding:8px;font-weight:bold">${{ env.VERSION }}</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #eee">
+                    <td style="padding:8px;color:#6c757d">Released By</td>
+                    <td style="padding:8px">${{ github.actor }}</td>
+                  </tr>
+                </table>
+                <div style="background:#f8d7da;border:1px solid #f5c6cb;border-radius:4px;padding:12px 16px;margin-top:16px">
+                  <p style="margin:0;color:#721c24;font-size:14px">
+                    ❌ Release pipeline failed. Helm values have NOT been updated on master.<br>
+                    Please check the pipeline logs and fix the issue before re-releasing.
+                  </p>
+                </div>
+                <div style="text-align:center;margin-top:20px">
+                  <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                     style="background:#d9534f;color:white;padding:10px 24px;border-radius:6px;text-decoration:none;font-size:14px;display:inline-block">
+                    View Failed Pipeline
+                  </a>
+                </div>
+              </div>
+              <div style="background:#f8f9fa;padding:10px 20px;border-top:1px solid #dee2e6;text-align:center">
+                <p style="margin:0;font-size:12px;color:#6c757d">PayCrest DevOps • ${{ github.repository }}</p>
+              </div>
+            </div>
