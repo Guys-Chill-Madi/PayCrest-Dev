@@ -1,0 +1,25 @@
+name: Auth Service CI/CD
+
+on:
+  pull_request:
+    branches: [test, master]
+    paths: ['auth-service/**']
+  push:
+    branches: [test]
+    paths: ['auth-service/**']
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_ci-python.yml
+    with:
+      service: auth-service
+      image: chillmadiguys/auth-service
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_AUTH }}
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+      DEVELOPMENT_TEAM_EMAIL: ${{ secrets.DEVELOPMENT_TEAM_EMAIL }}

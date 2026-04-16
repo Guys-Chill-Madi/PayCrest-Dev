@@ -1,0 +1,128 @@
+name: CI Maintenance Template
+
+on:
+  workflow_call:
+    secrets:
+      SONAR_TOKEN:
+        required: true
+      SONAR_HOST_URL:
+        required: true
+      MAIL_USERNAME:
+        required: true
+      MAIL_PASSWORD:
+        required: true
+      DEVELOPMENT_TEAM_EMAIL:
+        required: true
+
+jobs:
+  validate-labels:
+    name: Validate PR Labels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name)
+            const scopeLabels = ['service', 'maintenance']
+            const typeLabels = ['feature', 'fix', 'chore', 'security', 'docs']
+            const hasScope = labels.some(l => scopeLabels.includes(l))
+            const hasType = labels.some(l => typeLabels.includes(l))
+            if (!hasScope) core.setFailed(`Missing scope label. Add 'maintenance'. Current: ${labels.join(', ')}`)
+            if (!hasType) core.setFailed(`Missing type label. Add one of: feature, fix, chore, security, docs. Current: ${labels.join(', ')}`)
+
+  security-scan:
+    name: Security and Lint
+    needs: validate-labels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - name: SonarQube Quality Gate
+        uses: sonarsource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Helm Lint shared-infra
+        run: helm lint ./shared-infra/Helm
+
+      - name: Helm Lint umbrella
+        run: helm lint ./infra/Helm
+
+  notify:
+    name: Notify Team
+    needs: [validate-labels, security-scan]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get commit details
+        id: commit
+        run: |
+          echo "AUTHOR_NAME=$(git log -1 --pretty=format:'%an')" >> $GITHUB_OUTPUT
+          echo "AUTHOR_EMAIL=$(git log -1 --pretty=format:'%ae')" >> $GITHUB_OUTPUT
+          echo "COMMIT_MSG=$(git log -1 --pretty=format:'%s')" >> $GITHUB_OUTPUT
+          echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          echo "COMMIT_URL=https://github.com/${{ github.repository }}/commit/${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Determine status
+        id: status
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "EMOJI=❌" >> $GITHUB_OUTPUT; echo "COLOR=#d9534f" >> $GITHUB_OUTPUT; echo "STATUS_TEXT=FAILED" >> $GITHUB_OUTPUT
+          else
+            echo "EMOJI=✅" >> $GITHUB_OUTPUT; echo "COLOR=#5cb85c" >> $GITHUB_OUTPUT; echo "STATUS_TEXT=PASSED" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Map results to icons
+        id: icons
+        run: |
+          map_icon() { case "$1" in success) echo "✅ Passed";; failure) echo "❌ Failed";; skipped) echo "⏭️ Skipped";; *) echo "— Not Run";; esac; }
+          echo "LABEL_ICON=$(map_icon '${{ needs.validate-labels.result }}')" >> $GITHUB_OUTPUT
+          echo "SCAN_ICON=$(map_icon '${{ needs.security-scan.result }}')" >> $GITHUB_OUTPUT
+
+      - uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          to: ${{ secrets.DEVELOPMENT_TEAM_EMAIL }}
+          from: PayCrest DevOps <${{ secrets.MAIL_USERNAME }}>
+          subject: "${{ steps.status.outputs.EMOJI }} ${{ steps.status.outputs.STATUS_TEXT }} | maintenance | ${{ github.event_name }} | ${{ steps.commit.outputs.AUTHOR_NAME }}"
+          html_body: |
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #ddd;border-radius:8px;overflow:hidden">
+              <div style="background:${{ steps.status.outputs.COLOR }};color:white;padding:20px">
+                <h2 style="margin:0">${{ steps.status.outputs.EMOJI }} Maintenance Pipeline ${{ steps.status.outputs.STATUS_TEXT }}</h2>
+                <p style="margin:6px 0 0;opacity:0.9;font-size:14px">${{ github.event_name }} on ${{ github.ref_name }}</p>
+              </div>
+              <div style="background:#f8f9fa;padding:16px 20px;border-bottom:1px solid #e9ecef">
+                <h3 style="margin:0 0 12px;font-size:14px;color:#6c757d;text-transform:uppercase">Commit Details</h3>
+                <table style="width:100%;border-collapse:collapse;font-size:14px">
+                  <tr><td style="padding:4px 0;color:#6c757d;width:120px">Author</td><td style="font-weight:bold">${{ steps.commit.outputs.AUTHOR_NAME }} (${{ steps.commit.outputs.AUTHOR_EMAIL }})</td></tr>
+                  <tr><td style="padding:4px 0;color:#6c757d">Commit ID</td><td><a href="${{ steps.commit.outputs.COMMIT_URL }}" style="color:#0366d6;font-family:monospace;font-weight:bold">${{ steps.commit.outputs.SHORT_SHA }}</a></td></tr>
+                  <tr><td style="padding:4px 0;color:#6c757d">Message</td><td style="font-style:italic">${{ steps.commit.outputs.COMMIT_MSG }}</td></tr>
+                  <tr><td style="padding:4px 0;color:#6c757d">Branch</td><td>${{ github.ref_name }}</td></tr>
+                </table>
+              </div>
+              <div style="padding:20px">
+                <table style="width:100%;border-collapse:collapse;font-size:14px">
+                  <tr style="background:#f8f9fa"><td style="padding:10px 12px;border:1px solid #dee2e6;font-weight:bold">Label Validation</td><td style="padding:10px 12px;border:1px solid #dee2e6">${{ steps.icons.outputs.LABEL_ICON }}</td></tr>
+                  <tr><td style="padding:10px 12px;border:1px solid #dee2e6;font-weight:bold">Security + Helm Lint</td><td style="padding:10px 12px;border:1px solid #dee2e6">${{ steps.icons.outputs.SCAN_ICON }}</td></tr>
+                </table>
+                <div style="text-align:center;margin-top:20px">
+                  <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="background:#24292e;color:white;padding:10px 24px;border-radius:6px;text-decoration:none;font-size:14px;display:inline-block">View Pipeline Logs</a>
+                </div>
+              </div>
+            </div>

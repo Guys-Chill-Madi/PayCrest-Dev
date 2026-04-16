@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emi-service
+  namespace: pc-app
+  labels:
+    app: emi-service
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  replicas: {{ .Values.emiService.replicas }}
+  selector:
+    matchLabels:
+      app: emi-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: emi-service
+    spec:
+      containers:
+        - name: emi-container
+          image: {{ .Values.emiService.image }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            {{- toYaml .Values.emiService.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: pc-config-global
+            - secretRef:
+                name: pc-secrets-global
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3

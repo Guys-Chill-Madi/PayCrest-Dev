@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wallet-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Guys-Chill-Madi/PayCrest-Dev
+    targetRevision: master
+    path: wallet-service/Helm
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pc-app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
