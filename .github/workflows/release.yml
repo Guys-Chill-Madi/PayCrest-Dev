@@ -9,9 +9,10 @@ jobs:
     name: Build, Scan, Push and Update Helm Values
     runs-on: ubuntu-latest
     steps:
+
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
           ref: master
           fetch-depth: 0
 
