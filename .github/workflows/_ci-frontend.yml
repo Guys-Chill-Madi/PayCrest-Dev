@@ -114,6 +114,8 @@ jobs:
   push-sha-image:
     name: Build and Push SHA Image
     if: github.event_name == 'push' && github.ref_name == 'test'
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
