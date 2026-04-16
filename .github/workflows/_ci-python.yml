@@ -9,9 +9,6 @@ on:
       image:
         required: true
         type: string
-      sonar_token_secret:
-        required: true
-        type: string
     secrets:
       SONAR_TOKEN:
         required: true
