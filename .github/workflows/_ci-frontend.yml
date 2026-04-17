@@ -80,7 +80,6 @@ jobs:
 
       - name: SonarQube Quality Gate
         uses: sonarsource/sonarqube-quality-gate-action@v1
-        timeout-minutes: 5
         with:
           scanMetadataReportFile: .scannerwork/report-task.txt
         env:
