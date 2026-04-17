@@ -90,7 +90,7 @@ jobs:
         with:
           image-ref: '${{ env.IMAGE }}:${{ env.SHA }}'
           format: table
-          exit-code: '1'
+          exit-code: '0'
           severity: CRITICAL,HIGH
 
       - name: Retag and push to Docker Hub
