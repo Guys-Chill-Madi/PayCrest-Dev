@@ -8,8 +8,8 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 spec:
   scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
+    apiVersion: argoproj.io/v1alpha1
+    kind: Rollout
     name: loan-service
   minReplicas: {{ .Values.loanService.hpa.minReplicas }}
   maxReplicas: {{ .Values.loanService.hpa.maxReplicas }}

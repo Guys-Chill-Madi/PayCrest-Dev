@@ -48,11 +48,14 @@ spec:
       for: 10m
       labels: { severity: warning }
       annotations: { description: "Pod {{ $labels.pod }} has been Pending for 10+ minutes." }
-    - alert: DeploymentReplicasMismatch
-      expr: kube_deployment_spec_replicas != kube_deployment_status_replicas_available
+    - alert: RolloutReplicasMismatch
+      expr: |
+        kube_deployment_spec_replicas != kube_deployment_status_replicas_available
+        or
+        rollout_info{phase!="Healthy"} > 0
       for: 10m
       labels: { severity: warning }
-      annotations: { description: "Deployment {{ $labels.deployment }} mismatch: {{ $value }} replicas missing." }
+      annotations: { description: "Deployment/Rollout {{ $labels.namespace }}/{{ $labels.deployment }} has replica mismatch." }
     - alert: ContainerOOMKilled
       expr: kube_pod_container_status_terminated_reason{reason="OOMKilled"} > 0
       for: 1m

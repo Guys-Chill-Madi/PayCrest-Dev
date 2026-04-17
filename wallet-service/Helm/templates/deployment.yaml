@@ -1,5 +1,5 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: wallet-service
   namespace: pc-app
@@ -12,11 +12,6 @@ spec:
   selector:
     matchLabels:
       app: wallet-service
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
   template:
     metadata:
       labels:
@@ -65,3 +60,8 @@ spec:
         - name: uploads
           persistentVolumeClaim:
             claimName: pc-upload-pvc
+  strategy:
+    blueGreen:
+      activeService: wallet-service
+      previewService: wallet-service-preview
+      autoPromotionEnabled: false
