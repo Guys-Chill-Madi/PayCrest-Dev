@@ -12,3 +12,4 @@ loanService:
     limits:
       cpu: "200m"
       memory: "512Mi"
+image: chillmadiguys/loan-service:v1.1.2
