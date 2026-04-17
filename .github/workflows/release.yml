@@ -150,23 +150,23 @@ jobs:
           git commit -m "release: ${{ env.SERVICE }} → ${{ env.VERSION }} [skip ci]"
           git push origin $BRANCH
       
-            - name: Auto-merge PR to master
-              run: |
-                gh pr create \
-                  --title "release: ${{ env.SERVICE }} → ${{ env.VERSION }}" \
-                  --body "Automated release — updates Helm image tags to ${{ env.VERSION }}" \
-                  --base master \
-                  --head release/${{ env.SERVICE }}-${{ env.VERSION }}
-        
-                gh pr merge release/${{ env.SERVICE }}-${{ env.VERSION }} \ 
-                  --merge \
-                  --admin \
-                  --delete-branch
-      
-                echo "✅ Merged to master successfully"
-                echo "MERGED=true" >> $GITHUB_ENV
-              env:
-                GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+      - name: Auto-merge PR to master
+        run: |
+          gh pr create \
+            --title "release: ${{ env.SERVICE }} → ${{ env.VERSION }}" \
+            --body "Automated release — updates Helm image tags to ${{ env.VERSION }}" \
+            --base master \
+            --head release/${{ env.SERVICE }}-${{ env.VERSION }}
+  
+          gh pr merge release/${{ env.SERVICE }}-${{ env.VERSION }} \ 
+            --merge \
+            --admin \
+            --delete-branch
+
+          echo "✅ Merged to master successfully"
+          echo "MERGED=true" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Send SUCCESS notification
         if: success()
