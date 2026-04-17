@@ -131,7 +131,7 @@ jobs:
           echo "BRANCH=$BRANCH" >> $GITHUB_ENV   # ✅ moved up (IMPORTANT)
       
           git checkout -b $BRANCH
-      
+          
           git add \
             ${{ env.SERVICE }}/Helm/values.yaml \
             infra/Helm/values.yaml \
@@ -157,8 +157,8 @@ jobs:
             --body "Automated release — updates Helm image tags to ${{ env.VERSION }}" \
             --base master \
             --head release/${{ env.SERVICE }}-${{ env.VERSION }}
-  
-          gh pr merge release/${{ env.SERVICE }}-${{ env.VERSION }} \ 
+
+          gh pr merge release/${{ env.SERVICE }}-${{ env.VERSION }} \
             --merge \
             --admin \
             --delete-branch
