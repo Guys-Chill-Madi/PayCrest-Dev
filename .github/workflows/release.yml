@@ -1,21 +1,21 @@
 name: Release Pipeline
-
+ 
 on:
   release:
     types: [published]
-
+ 
 jobs:
   release:
     name: Build, Scan, Push and Update Helm Values
     runs-on: ubuntu-latest
     steps:
-
+ 
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT_TOKEN }}
           ref: master
           fetch-depth: 0
-
+ 
       - name: Parse release tag
         run: |
           TAG="${{ github.event.release.tag_name }}"
@@ -29,7 +29,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "IMAGE=chillmadiguys/$SERVICE" >> $GITHUB_ENV
           echo "Parsed: SERVICE=$SERVICE VERSION=$VERSION"
-
+ 
       - name: Validate service name
         run: |
           VALID="loan-service auth-service admin-service payment-service verification-service wallet-service emi-service manager-service api-gateway frontend"
@@ -38,7 +38,7 @@ jobs:
             exit 1
           fi
           echo "Service validated: ${{ env.SERVICE }}"
-
+ 
       - name: Set HELM_KEY for this service
         run: |
           case "${{ env.SERVICE }}" in
@@ -53,7 +53,7 @@ jobs:
             api-gateway)          echo "HELM_KEY=apiGateway" >> $GITHUB_ENV ;;
             frontend)             echo "HELM_KEY=frontend" >> $GITHUB_ENV ;;
           esac
-
+ 
       - name: Get SHA from test branch
         run: |
           git fetch origin test
@@ -64,17 +64,17 @@ jobs:
           fi
           echo "SHA=$SHA" >> $GITHUB_ENV
           echo "Found SHA: $SHA"
-
+ 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
+ 
       - name: Pull SHA image
         run: |
           docker pull ${{ env.IMAGE }}:${{ env.SHA }}
-
+ 
       - name: Trivy scan before release
         uses: aquasecurity/trivy-action@master
         with:
@@ -82,26 +82,26 @@ jobs:
           format: table
           exit-code: '0'
           severity: CRITICAL,HIGH
-
+ 
       - name: Retag and push to Docker Hub
         run: |
           docker tag ${{ env.IMAGE }}:${{ env.SHA }} ${{ env.IMAGE }}:${{ env.VERSION }}
           docker tag ${{ env.IMAGE }}:${{ env.SHA }} ${{ env.IMAGE }}:latest
           docker push ${{ env.IMAGE }}:${{ env.VERSION }}
           docker push ${{ env.IMAGE }}:latest
-
+ 
       - name: Install yq
         run: |
           sudo wget -qO /usr/local/bin/yq \
             https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
-
+ 
       - name: Update standalone service Helm values.yaml
         run: |
           FILE="${{ env.SERVICE }}/Helm/values.yaml"
           yq -i '.image = "${{ env.IMAGE }}:${{ env.VERSION }}"' "$FILE"
           echo "✅ Updated $FILE"
-
+ 
       - name: Update all 7 infra/Helm values files
         run: |
           FILES=(
@@ -121,17 +121,15 @@ jobs:
               echo "⚠️ File not found: $FILE"
             fi
           done
-
+ 
       - name: Commit and push via release branch
         run: |
           git config user.email "devops@paycrest.com"
           git config user.name "PayCrest DevOps Bot"
-      
+ 
           BRANCH="release/${{ env.SERVICE }}-${{ env.VERSION }}"
-          echo "BRANCH=$BRANCH" >> $GITHUB_ENV   # ✅ moved up (IMPORTANT)
-      
           git checkout -b $BRANCH
-          
+ 
           git add \
             ${{ env.SERVICE }}/Helm/values.yaml \
             infra/Helm/values.yaml \
@@ -141,41 +139,31 @@ jobs:
             infra/Helm/values-praveen.yaml \
             infra/Helm/values-surya.yaml \
             infra/Helm/values-thanu.yaml
-      
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-            exit 0
-          fi
-      
+ 
+          git diff --staged --quiet && echo "No changes to commit" && exit 0
+ 
           git commit -m "release: ${{ env.SERVICE }} → ${{ env.VERSION }} [skip ci]"
           git push origin $BRANCH
-      
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+ 
       - name: Auto-merge PR to master
         run: |
-          BRANCH="release/${{ env.SERVICE }}-${{ env.VERSION }}"
-      
-          # ✅ Check if branch exists remotely
-          if ! git ls-remote --exit-code --heads origin "$BRANCH"; then
-            echo "Branch $BRANCH does not exist. Skipping PR creation."
-            exit 0
-          fi
-      
           gh pr create \
             --title "release: ${{ env.SERVICE }} → ${{ env.VERSION }}" \
             --body "Automated release — updates Helm image tags to ${{ env.VERSION }}" \
             --base master \
-            --head "$BRANCH"
-      
-          gh pr merge "$BRANCH" \
+            --head ${{ env.BRANCH }}
+ 
+          gh pr merge ${{ env.BRANCH }} \
             --merge \
             --admin \
             --delete-branch
-      
+ 
           echo "✅ Merged to master successfully"
           echo "MERGED=true" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
-
+ 
       - name: Send SUCCESS notification
         if: success()
         uses: dawidd6/action-send-mail@v3
@@ -246,7 +234,7 @@ jobs:
                 <p style="margin:0;font-size:12px;color:#6c757d">PayCrest DevOps • ${{ github.repository }}</p>
               </div>
             </div>
-
+ 
       - name: Send FAILURE notification
         if: failure()
         uses: dawidd6/action-send-mail@v3
@@ -296,3 +284,4 @@ jobs:
                 <p style="margin:0;font-size:12px;color:#6c757d">PayCrest DevOps • ${{ github.repository }}</p>
               </div>
             </div>
+ 
