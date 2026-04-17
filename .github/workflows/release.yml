@@ -126,10 +126,12 @@ jobs:
         run: |
           git config user.email "devops@paycrest.com"
           git config user.name "PayCrest DevOps Bot"
-
+      
           BRANCH="release/${{ env.SERVICE }}-${{ env.VERSION }}"
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV   # ✅ moved up (IMPORTANT)
+      
           git checkout -b $BRANCH
-
+      
           git add \
             ${{ env.SERVICE }}/Helm/values.yaml \
             infra/Helm/values.yaml \
@@ -139,30 +141,32 @@ jobs:
             infra/Helm/values-praveen.yaml \
             infra/Helm/values-surya.yaml \
             infra/Helm/values-thanu.yaml
-
-          git diff --staged --quiet && echo "No changes to commit" && exit 0
-
+      
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+      
           git commit -m "release: ${{ env.SERVICE }} → ${{ env.VERSION }} [skip ci]"
           git push origin $BRANCH
-          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
-
-      - name: Auto-merge PR to master
-        run: |
-          gh pr create \
-            --title "release: ${{ env.SERVICE }} → ${{ env.VERSION }}" \
-            --body "Automated release — updates Helm image tags to ${{ env.VERSION }}" \
-            --base master \
-            --head ${{ env.BRANCH }}
-
-          gh pr merge ${{ env.BRANCH }} \
-            --merge \
-            --admin \
-            --delete-branch
-
-          echo "✅ Merged to master successfully"
-          echo "MERGED=true" >> $GITHUB_ENV
-        env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+      
+            - name: Auto-merge PR to master
+              run: |
+                gh pr create \
+                  --title "release: ${{ env.SERVICE }} → ${{ env.VERSION }}" \
+                  --body "Automated release — updates Helm image tags to ${{ env.VERSION }}" \
+                  --base master \
+                  --head release/${{ env.SERVICE }}-${{ env.VERSION }}
+        
+                gh pr merge release/${{ env.SERVICE }}-${{ env.VERSION }} \ 
+                  --merge \
+                  --admin \
+                  --delete-branch
+      
+                echo "✅ Merged to master successfully"
+                echo "MERGED=true" >> $GITHUB_ENV
+              env:
+                GH_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Send SUCCESS notification
         if: success()
