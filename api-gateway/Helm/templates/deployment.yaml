@@ -1,5 +1,5 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: api-gateway
   namespace: pc-edge
@@ -11,11 +11,6 @@ spec:
   selector:
     matchLabels:
       app: api-gateway
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
   template:
     metadata:
       labels:
@@ -64,3 +59,8 @@ spec:
             failureThreshold: 3
           resources:
             {{- toYaml .Values.apiGateway.resources | nindent 12 }}
+  strategy:
+    blueGreen:
+      activeService: api-gateway
+      previewService: api-gateway-preview
+      autoPromotionEnabled: false
