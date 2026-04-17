@@ -152,13 +152,16 @@ jobs:
       
       - name: Auto-merge PR to master
         run: |
+          BRANCH="release/${{ env.SERVICE }}-${{ env.VERSION }}"
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+
           gh pr create \
             --title "release: ${{ env.SERVICE }} → ${{ env.VERSION }}" \
             --body "Automated release — updates Helm image tags to ${{ env.VERSION }}" \
             --base master \
-            --head release/${{ env.SERVICE }}-${{ env.VERSION }}
+            --head "$BRANCH"
 
-          gh pr merge release/${{ env.SERVICE }}-${{ env.VERSION }} \
+          gh pr merge "$BRANCH" \
             --merge \
             --admin \
             --delete-branch
