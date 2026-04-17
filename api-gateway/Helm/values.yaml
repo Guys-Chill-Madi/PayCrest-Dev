@@ -12,4 +12,4 @@ apiGateway:
     limits:
       cpu: "200m"
       memory: "256Mi"
-image: chillmadiguys/api-gateway:v1.1.4
+image: chillmadiguys/api-gateway:v1.1.5
