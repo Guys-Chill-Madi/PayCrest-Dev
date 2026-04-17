@@ -63,10 +63,12 @@ jobs:
           cd ${{ inputs.service }}
           npm ci
 
-      - name: SonarQube Scan
+       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@v2
         with:
           projectBaseDir: ${{ inputs.service }}
+          args: >
+            -Dsonar.scanner.metadataFilePath=/github/workspace/.scannerwork/report-task.txt
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
@@ -74,6 +76,8 @@ jobs:
       - name: SonarQube Quality Gate
         uses: sonarsource/sonarqube-quality-gate-action@v1
         timeout-minutes: 5
+        with:
+          scanMetadataReportFile: .scannerwork/report-task.txt
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
