@@ -153,19 +153,24 @@ jobs:
       - name: Auto-merge PR to master
         run: |
           BRANCH="release/${{ env.SERVICE }}-${{ env.VERSION }}"
-          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
-
+      
+          # ✅ Check if branch exists remotely
+          if ! git ls-remote --exit-code --heads origin "$BRANCH"; then
+            echo "Branch $BRANCH does not exist. Skipping PR creation."
+            exit 0
+          fi
+      
           gh pr create \
             --title "release: ${{ env.SERVICE }} → ${{ env.VERSION }}" \
             --body "Automated release — updates Helm image tags to ${{ env.VERSION }}" \
             --base master \
             --head "$BRANCH"
-
+      
           gh pr merge "$BRANCH" \
             --merge \
             --admin \
             --delete-branch
-
+      
           echo "✅ Merged to master successfully"
           echo "MERGED=true" >> $GITHUB_ENV
         env:
