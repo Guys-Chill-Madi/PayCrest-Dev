@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/Guys-Chill-Madi/PayCrest-Dev
     targetRevision: master
-    path: frontend/helm
+    path: frontend/Helm
   destination:
     server: https://kubernetes.default.svc
     namespace: pc-frontend
