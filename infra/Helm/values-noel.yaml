@@ -42,7 +42,7 @@ apiGateway:
       cpu: "200m"
       memory: "256Mi"
 frontend:
-  image: "chillmadiguys/frontend:v1.1.1"
+  image: "chillmadiguys/frontend:v1.1.2"
   hpa:
     minReplicas: 1
     maxReplicas: 2

@@ -10,3 +10,16 @@ spec:
     - port: 8000
       targetPort: 8000
   type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service-preview
+  namespace: pc-app
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: ClusterIP
