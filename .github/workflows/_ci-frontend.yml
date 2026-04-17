@@ -108,7 +108,7 @@ jobs:
           severity: CRITICAL,HIGH
 
       - name: Helm Lint
-        run: helm lint ./${{ inputs.service }}/Helm
+        run: helm lint ./${{ inputs.service }}/helm
 
   push-sha-image:
     name: Build and Push SHA Image
