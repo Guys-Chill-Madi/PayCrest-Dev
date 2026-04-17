@@ -1,5 +1,5 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: emi-service
   namespace: pc-app
@@ -12,11 +12,6 @@ spec:
   selector:
     matchLabels:
       app: emi-service
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
   template:
     metadata:
       labels:
@@ -49,3 +44,8 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3
+  strategy:
+    blueGreen:
+      activeService: emi-service
+      previewService: emi-service-preview
+      autoPromotionEnabled: false

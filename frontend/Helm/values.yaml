@@ -12,3 +12,4 @@ frontend:
     limits:
       cpu: "200m"
       memory: "256Mi"
+image: chillmadiguys/frontend:v1.1.2
