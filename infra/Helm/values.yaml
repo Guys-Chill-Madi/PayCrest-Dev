@@ -24,7 +24,7 @@ appSecrets:
   jwtExpireMinutes: "60"
   internalServiceToken: "e9ccbcbfd93e305d56e67a751664bd4b79ed32b23a896cc71958b98008f0fbcb"
 apiGateway:
-  image: "chillmadiguys/api-gateway:v1.1.3"
+  image: "chillmadiguys/api-gateway:v1.1.4"
   port: "3000"
   jwtSecret: "pycrest_jwt_secret_devops_2024"
   jwtAlgorithm: "HS256"
