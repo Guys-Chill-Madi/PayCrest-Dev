@@ -21,7 +21,6 @@ spec:
             - kubectl-argo-rollouts
             - dashboard
             - --port=3100
-            - --all-namespaces
           ports:
             - containerPort: 3100
           resources:
