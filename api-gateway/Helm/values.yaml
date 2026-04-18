@@ -1,5 +1,5 @@
 apiGateway:
-  image: "chillmadiguys/api-gateway:v1.1.3"
+  image: "chillmadiguys/api-gateway:v1.1.5"
   hpa:
     minReplicas: 2
     maxReplicas: 4
@@ -12,4 +12,3 @@ apiGateway:
     limits:
       cpu: "200m"
       memory: "256Mi"
-image: chillmadiguys/api-gateway:v1.1.5

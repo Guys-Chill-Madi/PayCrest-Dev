@@ -103,7 +103,7 @@ jobs:
           else
             FILE="${{ env.SERVICE }}/Helm/values.yaml"
           fi
-          yq -i '.image = "${{ env.IMAGE }}:${{ env.VERSION }}"' "$FILE"
+          yq -i '.${{ env.HELM_KEY }}.image = "${{ env.IMAGE }}:${{ env.VERSION }}"' "$FILE"
           echo "HELM_VALUES_FILE=$FILE" >> $GITHUB_ENV
           echo "✅ Updated $FILE"
 
