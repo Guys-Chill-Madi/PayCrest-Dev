@@ -100,7 +100,7 @@ loanService:
       cpu: "200m"
       memory: "512Mi"
 managerService:
-  image: "chillmadiguys/manager-service:v1.1.1"
+  image: "chillmadiguys/manager-service:v1.1.2"
   replicas: 1
   resources:
     requests:
