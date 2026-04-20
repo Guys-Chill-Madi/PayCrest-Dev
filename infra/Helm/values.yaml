@@ -56,7 +56,7 @@ frontend:
       cpu: "200m"
       memory: "256Mi"
 adminService:
-  image: "chillmadiguys/admin-service:v1.1.1"
+  image: "chillmadiguys/admin-service:v1.1.3"
   replicas: 2
   resources:
     requests:
