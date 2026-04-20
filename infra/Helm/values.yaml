@@ -76,7 +76,7 @@ authService:
       cpu: "200m"
       memory: "512Mi"
 emiService:
-  image: "chillmadiguys/emi-service:v1.1.1"
+  image: "chillmadiguys/emi-service:v1.1.2"
   replicas: 1
   resources:
     requests:
