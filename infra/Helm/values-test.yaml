@@ -130,7 +130,7 @@ verificationService:
       cpu: "400m"
       memory: "512Mi"
 walletService:
-  image: "chillmadiguys/wallet-service:v1.1.1"
+  image: "chillmadiguys/wallet-service:v1.1.2"
   replicas: 2
   resources:
     requests:
