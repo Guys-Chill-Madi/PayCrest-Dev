@@ -110,7 +110,7 @@ managerService:
       cpu: "200m"
       memory: "512Mi"
 paymentService:
-  image: "chillmadiguys/payment-service:v1.1.1"
+  image: "chillmadiguys/payment-service:v1.1.2"
   replicas: 2
   resources:
     requests:
