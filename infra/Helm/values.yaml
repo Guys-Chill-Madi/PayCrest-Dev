@@ -120,7 +120,7 @@ paymentService:
       cpu: "500m"
       memory: "512Mi"
 verificationService:
-  image: "chillmadiguys/verification-service:v1.1.1"
+  image: "chillmadiguys/verification-service:v1.1.2"
   replicas: 2
   resources:
     requests:
