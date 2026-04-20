@@ -9,8 +9,9 @@ spec:
     - Ingress
     - Egress
   ingress:
-    - {}  #
+    - {}
   egress:
+    # DNS
     - to:
         - namespaceSelector:
             matchLabels:
@@ -28,6 +29,7 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+    # App traffic
     - to:
         - namespaceSelector:
             matchLabels:
@@ -36,6 +38,13 @@ spec:
         - protocol: TCP
           port: 3000
     - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: pc-frontend
+      ports:
+        - protocol: TCP
+          port: 80
+    - to:
         - ipBlock:
             cidr: 10.96.0.0/12
       ports:
@@ -43,13 +52,7 @@ spec:
           port: 3000
         - protocol: TCP
           port: 80
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: pc-frontend
-      ports:
-        - protocol: TCP
-          port: 80
+    # kgateway system
     - to:
         - namespaceSelector:
             matchLabels:
@@ -59,8 +62,66 @@ spec:
           port: 9977
         - protocol: TCP
           port: 443
+    # Monitoring (Grafana port 3000, Prometheus port 9090)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 9090
+        - protocol: TCP
+          port: 3000
+    # ArgoCD
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: argocd
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
+    # Argo Rollouts dashboard
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: argo-rollouts
+      ports:
+        - protocol: TCP
+          port: 3100
+    # Keycloak
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: keycloak
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Headlamp (kube-system)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
+    # Loki
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: logging
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 3100
 ---
-
+# Keep all existing policies below unchanged
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -108,7 +169,6 @@ spec:
         - protocol: TCP
           port: 8000
 ---
-
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -208,7 +268,6 @@ spec:
       ports:
         - protocol: TCP
           port: 8000
-    # Allow external HTTPS for Cashfree and other payment gateways
     - to:
         - ipBlock:
             cidr: 0.0.0.0/0
@@ -222,7 +281,6 @@ spec:
         - protocol: TCP
           port: 80
 ---
-
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
