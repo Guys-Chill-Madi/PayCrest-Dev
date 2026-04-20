@@ -106,12 +106,10 @@ jobs:
         run: |
           FILES=(
             "infra/Helm/values.yaml"
-            "infra/Helm/values-noel.yaml"
-            "infra/Helm/values-chandana.yaml"
-            "infra/Helm/values-nimesh.yaml"
-            "infra/Helm/values-praveen.yaml"
-            "infra/Helm/values-surya.yaml"
-            "infra/Helm/values-thanu.yaml"
+            "infra/Helm/values-dev.yaml"
+            "infra/Helm/values-prod.yaml"
+            "infra/Helm/values-test.yaml"
+            "infra/Helm/values-uat.yaml"
           )
           for FILE in "${FILES[@]}"; do
             if [ -f "$FILE" ]; then
@@ -133,12 +131,10 @@ jobs:
           git add \
             ${{ env.SERVICE }}/Helm/values.yaml \
             infra/Helm/values.yaml \
-            infra/Helm/values-noel.yaml \
-            infra/Helm/values-chandana.yaml \
-            infra/Helm/values-nimesh.yaml \
-            infra/Helm/values-praveen.yaml \
-            infra/Helm/values-surya.yaml \
-            infra/Helm/values-thanu.yaml
+            infra/Helm/values-dev.yaml \
+            infra/Helm/values-prod.yaml \
+            infra/Helm/values-test.yaml \
+            infra/Helm/values-uat.yaml
 
           git diff --staged --quiet && echo "No changes to commit" && exit 0
 
@@ -208,12 +204,10 @@ jobs:
                     <td style="padding:8px;font-size:12px">
                       ${{ env.SERVICE }}/Helm/values.yaml<br>
                       infra/Helm/values.yaml<br>
-                      infra/Helm/values-noel.yaml<br>
-                      infra/Helm/values-chandana.yaml<br>
-                      infra/Helm/values-nimesh.yaml<br>
-                      infra/Helm/values-praveen.yaml<br>
-                      infra/Helm/values-surya.yaml<br>
-                      infra/Helm/values-thanu.yaml
+                      infra/Helm/values-dev.yaml<br>
+                      infra/Helm/values-prod.yaml<br>
+                      infra/Helm/values-test.yaml<br>
+                      infra/Helm/values-uat.yaml<br>
                     </td>
                   </tr>
                 </table>
