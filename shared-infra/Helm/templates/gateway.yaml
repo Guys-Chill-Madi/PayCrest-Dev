@@ -1,6 +1,6 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
-metadata: 
+metadata:
   name: paycrest-kgate
   namespace: pc-gateway
 spec:
@@ -20,4 +20,9 @@ spec:
                   - pc-frontend
                   - pc-edge
                   - pc-gateway
-          
+                  - monitoring
+                  - argocd
+                  - argo-rollouts
+                  - keycloak
+                  - kube-system
+                  - logging
