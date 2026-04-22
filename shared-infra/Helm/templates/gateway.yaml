@@ -20,3 +20,9 @@ spec:
                   - pc-frontend
                   - pc-edge
                   - pc-gateway
+                  - monitoring
+                  - logging
+                  - argocd
+                  - argo-rollouts
+                  - keycloak
+                  - kube-system

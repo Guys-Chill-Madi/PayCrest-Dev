@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Config
+clusters:
+- cluster:
+    server: https://<MASTER_PUBLIC_IP>:6443
+    insecure-skip-tls-verify: true
+  name: cluster
+contexts:
+- context:
+    cluster: cluster
+    user: oidc-user
+  name: cluster
+current-context: cluster
+users:
+- name: oidc-user
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: kubectl
+      args:
+        - oidc-login
+        - get-token
+        - --oidc-issuer-url=https://keycloak.yourdomain.com/realms/paycrest
+        - --oidc-client-id=kubernetes
+        - --oidc-client-secret=<CLIENT_SECRET>
+        - --grant-type=password

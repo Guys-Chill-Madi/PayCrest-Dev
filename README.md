@@ -1,19 +1,8 @@
-# PayCrest LMS — Production Kubernetes Deployment
+# PayCrest LMS
 
-<div align="center">
+A production-grade **Loan Management System** built on a microservices architecture, deployed on Kubernetes with a full DevOps pipeline including GitOps, blue-green deployments, centralized logging, monitoring, and identity management.
 
-![Kubernetes](https://img.shields.io/badge/Kubernetes-v1.34.6-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
-![Helm](https://img.shields.io/badge/Helm-v3-0F1689?style=for-the-badge&logo=helm&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Hub-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
-![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)
-![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800?style=for-the-badge&logo=grafana&logoColor=white)
-
-**A full-stack microservices Loan Management System deployed on a production-grade bare-metal Kubernetes cluster — built as a DevOps training project covering the complete software delivery lifecycle.**
-
-[Architecture](#architecture) • [Prerequisites](#prerequisites) • [Quick Start](#quick-start) • [CI/CD Pipeline](#cicd-pipeline) • [Monitoring](#monitoring) • [Contributing](#contributing) • [Security](#security-policy)
-
-</div>
+> **Live:** [paycrest.online](https://paycrest.online)
 
 ---
 
@@ -21,130 +10,126 @@
 
 - [Project Overview](#project-overview)
 - [Architecture](#architecture)
-- [Technology Stack](#technology-stack)
+- [Microservices](#microservices)
+- [Tech Stack](#tech-stack)
 - [Repository Structure](#repository-structure)
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Helm Chart Configuration](#helm-chart-configuration)
-- [Namespace Design](#namespace-design)
-- [Network Policies](#network-policies)
+- [Infrastructure](#infrastructure)
 - [CI/CD Pipeline](#cicd-pipeline)
-- [Monitoring & Alerting](#monitoring--alerting)
-- [Storage](#storage)
-- [Contributing](#contributing)
-- [Pull Request Guidelines](#pull-request-guidelines)
-- [Branch Strategy](#branch-strategy)
-- [Security Policy](#security-policy)
+- [GitOps with ArgoCD](#gitops-with-argocd)
+- [Blue-Green Deployments](#blue-green-deployments)
+- [Observability](#observability)
+- [Identity & Access Management](#identity--access-management)
+- [Network Security](#network-security)
+- [Storage Strategy](#storage-strategy)
+- [Dashboard URLs](#dashboard-urls)
+- [Getting Started (New Cluster)](#getting-started-new-cluster)
+- [GitHub Secrets Required](#github-secrets-required)
+- [Team Access](#team-access)
 
 ---
 
 ## Project Overview
 
-PayCrest LMS is a microservices-based Loan Management System deployed on a **3-node bare-metal kubeadm Kubernetes cluster** hosted on AWS EC2. This project was built as a comprehensive DevOps training exercise covering:
+PayCrest LMS is a fintech platform that handles the full loan lifecycle — from customer registration and KYC verification, through loan application and manager approval, to EMI scheduling, payment processing, and wallet management. It is built as a set of independent Python FastAPI microservices behind a Node.js API gateway, with a React/TypeScript frontend.
 
-- **Container orchestration** with Kubernetes (kubeadm)
-- **Package management** with Helm umbrella charts
-- **Service mesh routing** with kgateway (Envoy proxy)
-- **Network security** with Calico CNI and Kubernetes NetworkPolicies
-- **GitOps CI/CD** with GitHub Actions
-- **Observability** with Prometheus, Grafana, and Alertmanager
-- **Persistent storage** with NFS CSI driver
-- **Policy enforcement** with Kyverno admission controller
-- **Security scanning** with SonarQube, Snyk, and Trivy
-
-The application consists of **8 Python FastAPI microservices**, a **Node.js API gateway**, a **React frontend**, and a **MongoDB database** — all orchestrated across **5 isolated Kubernetes namespaces**.
+The entire infrastructure is deployed on AWS EC2 using Kubernetes (kubeadm), with HAProxy handling SSL termination, kgateway (Envoy) routing all internal traffic, ArgoCD managing deployments via GitOps, and Argo Rollouts providing zero-downtime blue-green deployments.
 
 ---
 
 ## Architecture
 
 ```
-                          ┌─────────────────────────────────────────┐
-                          │           AWS VPC (10.0.0.0/16)         │
-                          │         Availability Zone: us-east-1a   │
-                          │           Subnet: 10.0.1.0/24           │
-                          │                                          │
-   Internet Users         │  ┌──────────────────┐  ┌─────────────┐  │
-   (Admin/Customer/       │  │ EC2: HAProxy      │  │ EC2:        │  │
-    Manager)              │  │ + NFS Server      │  │ SonarQube   │  │
-        │                 │  │ (10.0.1.27)       │  │ Server      │  │
-        │ HTTP :80        │  │ Port 80 → 31748   │  └─────────────┘  │
-        └─────────────────┼──►                  │                    │
-                          │  └────────┬─────────┘                    │
-                          │           │ NodePort :31748               │
-                          │  ┌────────▼────────────────────────────┐ │
-                          │  │         Kubernetes Cluster           │ │
-                          │  │  ┌──────────────────────────────┐   │ │
-                          │  │  │  pc-gateway (Envoy/kgateway)  │   │ │
-                          │  │  │  HTTPRoute → /api → pc-edge   │   │ │
-                          │  │  │  HTTPRoute → /    → pc-frontend│  │ │
-                          │  │  └──────┬───────────────┬────────┘   │ │
-                          │  │         │               │             │ │
-                          │  │  ┌──────▼──────┐ ┌─────▼──────────┐ │ │
-                          │  │  │  pc-edge    │ │  pc-frontend   │ │ │
-                          │  │  │  api-gateway│ │  React/Nginx   │ │ │
-                          │  │  │  (Node.js)  │ └────────────────┘ │ │
-                          │  │  └──────┬──────┘                    │ │
-                          │  │         │ TCP :8000                  │ │
-                          │  │  ┌──────▼──────────────────────┐    │ │
-                          │  │  │           pc-app             │    │ │
-                          │  │  │  auth    loan    wallet      │    │ │
-                          │  │  │  admin   payment emi         │    │ │
-                          │  │  │  manager verification        │    │ │
-                          │  │  └──────┬───────────────────────┘    │ │
-                          │  │         │ TCP :27017                  │ │
-                          │  │  ┌──────▼──────┐  ┌──────────────┐   │ │
-                          │  │  │   pc-data   │  │  monitoring  │   │ │
-                          │  │  │   MongoDB   │  │  Prometheus  │   │ │
-                          │  │  │  StatefulSet│  │  Grafana     │   │ │
-                          │  │  └──────┬──────┘  │  Alertmanager│   │ │
-                          │  │         │          └──────────────┘   │ │
-                          │  └─────────┼────────────────────────────┘ │
-                          │            │ NFS Mount                     │
-                          │  ┌─────────▼──────────────────────┐       │
-                          │  │  NFS Server /var/nfs/paycrest   │       │
-                          │  │  PV (mongo-data) + PV (uploads) │       │
-                          │  └────────────────────────────────┘       │
-                          └─────────────────────────────────────────┘
+Internet
+    │  HTTPS :443
+    ▼
+HAProxy + Certbot  (ip-10-0-1-27 · Elastic IP: 23.23.104.150)
+    │  SSL termination · ACL-based subdomain routing
+    │  Basic auth on: prometheus, rollouts, loki
+    │
+    ├── sonar.paycrest.online ──────► SonarQube EC2 (direct, port 9000)
+    │
+    └── all other subdomains ───────► kgateway NodePort :31748
+                                            │
+                                   HTTPRoute by hostname
+                                            │
+              ┌─────────────────────────────┼──────────────────────────────┐
+              │                             │                              │
+         App Routes                  Dashboard Routes                    ...
+    frontend-service              grafana, prometheus,               keycloak,
+    api-gateway                   argocd, rollouts,                  headlamp,
+    (pc-frontend, pc-edge)        loki  (monitoring,argocd ns)       kube-system
+              │
+   ┌──────────┴────────────────────────────────┐
+   │           Kubernetes Cluster              │
+   │  Master: ip-10-0-1-155                    │
+   │  Workers: ip-10-0-1-102                   │
+   │           ip-10-0-1-245                   │
+   │           ip-10-0-1-85                    │
+   └──────────┬────────────────────────────────┘
+              │  NFS CSI Mount
+              ▼
+   NFS Server (ip-10-0-1-27)
+   /var/nfs/paycrest  →  app PVCs
+   /var/nfs/keycloak  →  keycloak PVC (dedicated — prevents H2 locking)
 ```
 
-### Traffic Routing Explained
-
-1. **User → HAProxy** — All HTTP traffic enters through HAProxy on port 80
-2. **HAProxy → NodePort** — Round-robin load balanced to NodePort 31748 on worker nodes
-3. **NodePort → kgateway** — kube-proxy DNAT rules forward to kgateway/Envoy pod
-4. **kgateway → HTTPRoute** — Envoy matches path prefix and routes:
-   - `/api/*` → `api-gateway` service in `pc-edge` namespace
-   - `/*` → `frontend-service` in `pc-frontend` namespace
-5. **api-gateway → microservices** — JWT validation then forwards to respective service via DNS
-6. **microservices → MongoDB** — Direct connection via headless service DNS
-
-> **Key insight:** The React frontend runs in the user's browser after initial load. All API calls come from the browser directly to HAProxy — not from the frontend pod. This is why the NetworkPolicy between `pc-frontend` and `pc-edge` is not needed.
+**Key design decisions:**
+- HAProxy terminates all SSL. kgateway handles all internal routing via HTTPRoutes.
+- All services are **ClusterIP** — no NodePorts exposed except kgateway itself (31748).
+- All dashboards are routed through kgateway HTTPRoutes — same single entry point as the app.
+- SonarQube is the only exception — it runs on its own EC2 and HAProxy routes directly to it.
 
 ---
 
-## Technology Stack
+## Microservices
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Container Orchestration | Kubernetes v1.34.6 (kubeadm) | Cluster management |
-| Package Management | Helm v3 | Kubernetes package manager |
-| CNI | Calico | Pod networking + NetworkPolicy enforcement |
-| Ingress/Gateway | kgateway (Envoy) | Layer 7 routing |
-| Frontend | React + Nginx | SPA served as static files |
-| API Gateway | Node.js (Express) | JWT auth + request routing |
-| Microservices | Python FastAPI (×8) | Business logic |
-| Database | MongoDB 7.0 | Document storage |
-| Storage | NFS CSI Driver | Persistent volumes |
-| CI/CD | GitHub Actions | Automated pipelines |
-| Image Registry | Docker Hub | Container image storage |
-| Code Quality | SonarQube | Static analysis + quality gates |
-| Dependency Security | Snyk | Vulnerability scanning |
-| Container Security | Trivy | Container image scanning |
-| Monitoring | Prometheus + Grafana | Metrics + dashboards |
-| Alerting | Alertmanager + Slack | Alert routing |
-| Policy | Kyverno | Admission control |
-| Infrastructure | AWS EC2 (bare-metal) | Compute |
+| Service | Language | Namespace | Port | Responsibility |
+|---------|----------|-----------|------|----------------|
+| frontend | React + TypeScript | pc-frontend | 80 | Customer and staff UI |
+| api-gateway | Node.js | pc-edge | 3000 | Request routing, auth middleware |
+| auth-service | Python FastAPI | pc-app | 8000 | Authentication, JWT, MPIN |
+| loan-service | Python FastAPI | pc-app | 8000 | Loan origination, EMI calculations |
+| admin-service | Python FastAPI | pc-app | 8000 | Staff management, approvals, audit |
+| manager-service | Python FastAPI | pc-app | 8000 | Manager review, sanctions |
+| verification-service | Python FastAPI | pc-app | 8000 | KYC, document verification, scoring |
+| payment-service | Python FastAPI | pc-app | 8000 | Cashfree payment gateway integration |
+| wallet-service | Python FastAPI | pc-app | 8000 | Wallet, transactions, MPIN |
+| emi-service | Python FastAPI | pc-app | 8000 | EMI scheduling, penalties, notifications |
+| mongodb | MongoDB | pc-data | 27017 | Database (StatefulSet) |
+
+All microservices use Argo Rollout resources (not standard Deployments) to support blue-green deployments. MongoDB stays as a StatefulSet.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | React 18, TypeScript, Vite, Nginx |
+| **API Gateway** | Node.js, Express |
+| **Backend** | Python 3.11, FastAPI, Motor (async MongoDB) |
+| **Database** | MongoDB 6 |
+| **Container Runtime** | containerd |
+| **Orchestration** | Kubernetes v1.34 (kubeadm) |
+| **CNI** | Calico |
+| **Gateway** | kgateway (Envoy Proxy) — Gateway API v1.4 |
+| **Load Balancer** | HAProxy |
+| **SSL** | Let's Encrypt + Certbot |
+| **Storage** | NFS CSI Driver + NFS Server |
+| **GitOps** | ArgoCD |
+| **Deployments** | Argo Rollouts (Blue-Green) |
+| **CI/CD** | GitHub Actions |
+| **Container Registry** | Docker Hub |
+| **Code Quality** | SonarQube Community Edition |
+| **Dependency Scan** | Snyk |
+| **Image Scan** | Trivy |
+| **Metrics** | Prometheus + kube-prometheus-stack |
+| **Dashboards** | Grafana |
+| **Logging** | Loki + Promtail |
+| **K8s Dashboard** | Headlamp |
+| **Identity (OIDC)** | Keycloak 26 |
+| **Policy Engine** | Kyverno |
+| **Cloud** | AWS EC2 (Ubuntu 22.04) |
 
 ---
 
@@ -152,665 +137,398 @@ The application consists of **8 Python FastAPI microservices**, a **Node.js API 
 
 ```
 PayCrest-Dev/
-├── infra/
-│   ├── Helm/                          # Umbrella Helm chart
-│   │   ├── Chart.yaml                 # Umbrella chart with 11 dependencies
-│   │   ├── values.yaml                # Default values
-│   │   ├── values-noel.yaml           # Environment-specific overrides
-│   │   ├── templates/
-│   │   │   ├── _helpers.tpl           # Reusable template helpers
-│   │   │   ├── app-secrets.yaml       # pc-secrets-global secret
-│   │   │   ├── api-secrets.yaml       # pc-secret-api secret
-│   │   │   ├── configmap.yaml         # Global configmap
-│   │   │   ├── frontend-configmap.yaml# Nginx config
-│   │   │   ├── network-policies.yaml  # All namespace NetworkPolicies
-│   │   │   ├── gateway.yaml           # kgateway Gateway resource
-│   │   │   ├── routes.yaml            # HTTPRoute rules
-│   │   │   ├── pvc.yaml               # Upload PersistentVolumeClaim
-│   │   │   ├── storageclass.yaml      # NFS StorageClass
-│   │   │   ├── reference-api.yaml     # ReferenceGrant for api-gateway
-│   │   │   └── reference-frontend.yaml# ReferenceGrant for frontend
-│   │   └── charts/
-│   │       ├── mongodb/               # MongoDB StatefulSet
-│   │       ├── api-gateway/           # Node.js API gateway
-│   │       ├── frontend/              # React frontend
-│   │       ├── admin-service/
-│   │       ├── auth-service/
-│   │       ├── emi-service/
-│   │       ├── loan-service/          # Has HPA
-│   │       ├── manager-service/
-│   │       ├── payment-service/
-│   │       ├── verification-service/
-│   │       └── wallet-service/
-│   ├── create-admin.yaml              # One-time admin user creation job
-│   ├── update-mongo-ip.sh             # MongoDB IP update script (workaround)
-│   └── essential-alerts.yaml          # PrometheusRule for alerting
-├── monitoring/
-│   └── essential-alerts.yaml          # Prometheus alerting rules
-└── .github/
-    └── workflows/
-        ├── admin-service.yml          # CI/CD pipeline
-        ├── auth-service.yml
-        ├── loan-service.yml
-        ├── payment-service.yml
-        ├── verification-service.yml
-        ├── wallet-service.yml
-        ├── emi-service.yml
-        └── manager-service.yml
+│
+├── .github/workflows/
+│   ├── _ci-python.yml          ← Reusable CI template for all Python services
+│   ├── _ci-node.yml            ← Reusable CI template for Node.js
+│   ├── _ci-frontend.yml        ← Reusable CI template for React frontend
+│   ├── _ci-maintenance.yml     ← Scheduled maintenance tasks
+│   ├── release.yml             ← CD release pipeline (triggered by tags)
+│   └── [service].yml           ← Per-service workflow that calls reusable templates
+│
+├── argocd-apps/                ← ArgoCD Application manifests
+│   ├── shared-infra-app.yaml   ← Deploys gateway, routes, secrets, dashboards
+│   ├── mongodb-app.yaml
+│   ├── api-gateway-app.yaml
+│   └── [service]-app.yaml      ← One per microservice
+│
+├── shared-infra/Helm/          ← Shared infrastructure Helm chart (ArgoCD managed)
+│   ├── Chart.yaml
+│   ├── values.yaml
+│   └── templates/
+│       ├── storageclass.yaml       ← nfs-csi StorageClass
+│       ├── gateway.yaml            ← kgateway Gateway resource
+│       ├── routes.yaml             ← App HTTPRoute (paycrest.online routing)
+│       ├── dashboard-routes.yaml   ← ReferenceGrants + HTTPRoutes for all dashboards
+│       ├── network-policies.yaml   ← Zero-trust network policies
+│       ├── pvc.yaml                ← pc-upload-pvc (ReadWriteMany 10Gi)
+│       ├── keycloak.yaml           ← Keycloak namespace + PVC + Deployment + Service
+│       ├── headlamp.yaml           ← Headlamp Deployment + SA + token Secret
+│       ├── rollouts-dashboard.yaml ← Rollouts dashboard + RBAC
+│       ├── api-secrets.yaml        ← api-gateway Kubernetes Secrets
+│       ├── app-secrets.yaml        ← microservice Kubernetes Secrets
+│       ├── mongo-secrets.yaml      ← MongoDB credentials
+│       ├── configmap.yaml
+│       ├── frontend-configmap.yaml
+│       └── create-admin.yaml
+│
+├── [service]/                  ← One folder per microservice
+│   ├── Helm/                   ← Service Helm chart (watched by ArgoCD)
+│   │   ├── Chart.yaml
+│   │   ├── values.yaml         ← image.tag updated here on each release
+│   │   └── templates/
+│   │       ├── deployment.yaml ← Argo Rollout resource (not standard Deployment)
+│   │       ├── service.yaml
+│   │       └── hpa.yaml        ← (api-gateway, loan-service, frontend only)
+│   ├── app/                    ← Application source code
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── sonar-project.properties
+│   └── .last-sha               ← Last built image SHA (written by CI pipeline)
+│
+├── mongodb/Helm/               ← MongoDB StatefulSet Helm chart
+├── monitoring/                 ← Alert rules and Grafana PVC config
+├── scripts/haproxy.cfg         ← Full HAProxy configuration reference
+└── Cluster-Initialization/     ← Reference files for cluster setup (not ArgoCD managed)
+    ├── k8s-install.cfg         ← Node installation script
+    ├── oidc-api-flag.cfg       ← API server OIDC flag instructions
+    ├── oidc-rbac.yaml          ← OIDC ClusterRoleBindings
+    └── team-config.yaml        ← Team kubeconfig template
 ```
 
 ---
 
-## Prerequisites
+## Infrastructure
 
-### Infrastructure Requirements
+### EC2 Instances
 
-| Component | Spec | Count |
-|-----------|------|-------|
-| Master Node EC2 | t3.medium (2 vCPU, 4GB RAM) | 1 |
-| Worker Node EC2 | t3.medium (2 vCPU, 4GB RAM) | 2 |
-| HAProxy + NFS EC2 | t3.small (2 vCPU, 2GB RAM) | 1 |
-| SonarQube EC2 | t3.medium (2 vCPU, 4GB RAM) | 1 |
+| Instance | Type | Role |
+|----------|------|------|
+| ip-10-0-1-155 | t2.medium | Kubernetes master (control plane) |
+| ip-10-0-1-102 | t2.medium | Worker node 1 |
+| ip-10-0-1-245 | t2.medium | Worker node 2 |
+| ip-10-0-1-85 | t2.medium | Worker node 3 |
+| ip-10-0-1-27 | t2.medium | HAProxy + NFS server |
+| ip-10-0-1-248 | t2.medium | SonarQube |
 
-### Software Requirements
+### Kubernetes Namespaces
 
-- kubeadm v1.34.6
-- containerd v1.7+
-- Helm v3.x
-- Calico CNI v3.27+
-- NFS CSI Driver
-- kgateway v2.0.3
-- Prometheus kube-prometheus-stack
-
-### GitHub Secrets Required
-
-```
-DOCKER_USERNAME          # Docker Hub username
-DOCKER_PASSWORD          # Docker Hub password/token
-SONAR_TOKEN              # SonarQube authentication token
-SONAR_HOST_URL           # SonarQube server URL
-SNYK_TOKEN               # Snyk authentication token
-MAIL_USERNAME            # Gmail address for notifications
-MAIL_PASSWORD            # Gmail app password
-DEVELOPMENT_TEAM_EMAIL   # Team email for notifications
-```
-
----
-
-## Quick Start
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/YOUR-ORG/PayCrest-Dev.git
-cd PayCrest-Dev/infra/Helm
-```
-
-### 2. Create namespaces and labels
-
-```bash
-for ns in pc-app pc-data pc-edge pc-frontend pc-gateway; do
-  kubectl create namespace $ns
-done
-
-for ns in pc-app pc-data pc-edge pc-frontend pc-gateway kube-system kgateway-system; do
-  kubectl label namespace $ns kubernetes.io/metadata.name=$ns --overwrite
-done
-```
-
-### 3. Update values for your environment
-
-```bash
-cp values.yaml values-myenv.yaml
-# Edit values-myenv.yaml:
-# - nfs.server: your NFS server IP
-# - nfs.share: your NFS share path
-# - image tags if needed
-```
-
-### 4. Deploy with Helm
-
-```bash
-helm dependency update
-helm lint . -f values-myenv.yaml
-helm install paycrest-v1 . -f values-myenv.yaml
-```
-
-### 5. Post-install steps
-
-```bash
-# Fix NFS upload permissions
-UPLOAD_PVC=$(kubectl get pvc pc-upload-pvc -n pc-app -o jsonpath='{.spec.volumeName}')
-# SSH to NFS server and run:
-# chmod 777 /var/nfs/paycrest/${UPLOAD_PVC}
-
-# Create admin user (runs automatically as a Job)
-kubectl logs job/create-admin -n pc-app
-
-# Verify all pods are running
-kubectl get pods -A
-```
-
-### 6. Access the application
-
-```bash
-# Get HAProxy IP
-echo "App URL: http://<haproxy-ip>"
-
-# Test login
-curl -s http://<haproxy-ip>/api/auth/token \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=admin@lms.com&password=admin123" | python3 -m json.tool
-```
-
----
-
-## Helm Chart Configuration
-
-### values.yaml Structure
-
-All environment-specific configuration lives in `values.yaml`. Override with `-f values-myenv.yaml` for different environments.
-
-```yaml
-# NFS Storage backend
-nfs:
-  server: "10.0.1.27"      # Change per environment
-  share: "/var/nfs/paycrest"
-
-# Per-service configuration
-authService:
-  image: "chillmadiguys/auth-service:v1.1.1"   # Pin exact version
-  replicas: 2                                    # HA - 2 replicas minimum
-  resources:
-    requests:
-      cpu: "100m"     # Guaranteed CPU
-      memory: "96Mi"  # Guaranteed memory
-    limits:
-      cpu: "200m"     # Maximum CPU
-      memory: "512Mi" # OOMKill threshold
-```
-
-### Template Helpers (`_helpers.tpl`)
-
-Shared templates eliminate code duplication across 8 service files:
-
-| Helper | Purpose |
-|--------|---------|
-| `paycrest.labels` | Common Helm labels on all resources |
-| `paycrest.appEnvFrom` | Standard secret + configmap injection |
-| `paycrest.appProbes` | Liveness + readiness probes on port 8000 |
-| `paycrest.antiAffinity` | Pod spread across nodes |
-| `paycrest.rollingUpdate` | Zero-downtime deployment strategy |
-| `paycrest.uploadVolumeMount` | NFS volume mount at `/app/uploads` |
-| `paycrest.uploadVolume` | PVC reference |
-
-### Deploying to a New Environment
-
-```bash
-# Create environment values file
-cat > values-production.yaml << EOF
-nfs:
-  server: "10.x.x.x"
-  share: "/var/nfs/paycrest"
-
-appSecrets:
-  jwtSecret: "CHANGE_ME_IN_PRODUCTION"
-  internalServiceToken: "CHANGE_ME_IN_PRODUCTION"
-EOF
-
-helm install paycrest-prod . -f values-production.yaml
-```
-
----
-
-## Namespace Design
-
-We use **5 isolated namespaces** instead of a single namespace for security isolation and blast radius reduction.
-
-| Namespace | Contains | Trust Level |
-|-----------|---------|-------------|
-| `pc-gateway` | kgateway/Envoy proxy | Public — accepts internet traffic |
-| `pc-frontend` | React/Nginx | Semi-public — serves static files |
-| `pc-edge` | Node.js API gateway | Internal — requires gateway auth |
-| `pc-app` | 8 Python microservices | Internal — requires edge auth |
-| `pc-data` | MongoDB | Private — database only |
-
-**Why not one namespace?** A single namespace with no NetworkPolicies means any compromised pod can reach any other pod — including the database. With 5 namespaces enforced by NetworkPolicies, compromising the frontend pod gives an attacker no path to the database. Each namespace boundary is a security checkpoint.
-
----
-
-## Network Policies
-
-All NetworkPolicies are defined in `templates/network-policies.yaml` and follow the **principle of least privilege** — deny all, then allow only what is necessary.
-
-### Trust Chain
-
-```
-Internet ──► pc-gateway ──► pc-edge ──► pc-app ──► pc-data
-              (public)     (port 3000) (port 8000) (port 27017)
-```
-
-### Policy Summary
-
-| Policy | Namespace | Ingress From | Egress To |
-|--------|-----------|-------------|-----------|
-| `gateway-policy` | pc-gateway | Anyone (internet) | pc-edge:3000, pc-frontend:80 |
-| `gateway-shield` | pc-edge | pc-gateway only | pc-app:8000 |
-| `frontend-isolation` | pc-frontend | pc-gateway only | DNS only |
-| `app-isolation` | pc-app | pc-edge + intra-namespace | pc-data:27017, DNS, external:443 |
-| `allow-from-app` | pc-data | pc-app only | — |
-
-### Why ipBlock Rules?
-
-Every NetworkPolicy that routes through a Kubernetes Service also needs an `ipBlock` for the Service CIDR (`10.96.0.0/12`). This is because kube-proxy rewrites packet destinations from pod IP to Service ClusterIP — without the ipBlock rule, the return traffic gets dropped even if the pod-to-pod rule allows it.
+| Namespace | Purpose |
+|-----------|---------|
+| pc-gateway | kgateway Envoy proxy |
+| pc-frontend | React frontend |
+| pc-edge | Node.js API gateway |
+| pc-app | All Python microservices |
+| pc-data | MongoDB |
+| monitoring | Prometheus + Grafana + AlertManager |
+| logging | Loki + Promtail |
+| argocd | ArgoCD GitOps controller |
+| argo-rollouts | Argo Rollouts controller + dashboard |
+| keycloak | Keycloak identity provider |
+| kube-system | Headlamp + metrics-server + NFS CSI |
+| kgateway-system | kgateway controller |
 
 ---
 
 ## CI/CD Pipeline
 
-Each microservice has its own independent GitHub Actions pipeline with two main jobs:
+### Overview
 
-### Pipeline Flow
+The pipeline has three separate triggers:
 
-```
-Push to 'test' branch
-        │
-        ▼
-┌───────────────────┐
-│ Security & Validation │
-│                       │
-│ 1. SonarQube Scan     │──── FAIL ──► Email Notification
-│ 2. Quality Gate       │
-│ 3. Snyk Dependency    │
-│ 4. Docker Build       │
-│ 5. Trivy Scan         │
-└───────┬───────────┘
-        │ PASS
-        ▼
-Pull Request to 'main'
-        │
-Manual workflow_dispatch
-  (with version tag)
-        │
-        ▼
-┌───────────────────┐
-│ Release to Production │
-│                       │
-│ 1. Validate semver tag│
-│ 2. Final Docker build │
-│ 3. Trivy critical check│
-│ 4. Push to Docker Hub │
-│ 5. Tag as :latest     │
-└───────┬───────────┘
-        │
-        ▼
-Email Notification (success/failure)
-```
+1. **Pull Request** → runs all 7 CI quality checks
+2. **Merge to `test` branch** → builds and pushes SHA-tagged Docker image
+3. **GitHub Release tag** (`service-name-vX.Y.Z`) → runs CD pipeline to deploy
 
-### Triggering a Release
+### CI Pipeline — 7 Stages on every Pull Request
 
-1. Merge your feature branch to `test`
-2. Pipeline runs security scans automatically
-3. Open a Pull Request from `test` to `main`
-4. After PR approval and merge, go to GitHub Actions
-5. Select the service workflow → Run workflow → Enter version (e.g., `v1.2.3`)
-6. Image is built, scanned, and pushed to Docker Hub
-7. Update `values.yaml` image tag and `helm upgrade`
+**Stage 1 — Validate Labels.** The workflow reads the PR labels before doing anything. If the required labels are missing the pipeline exits immediately. No scans, no builds. The PR cannot be merged until labels are correct.
 
-### Version Tag Format
+**Stage 2 — SonarQube Analysis.** Source code is sent to the self-hosted SonarQube server at `sonar.paycrest.online`. It scans for bugs, vulnerabilities, code smells, and duplications. Results appear as a PR comment on GitHub. Uses `SONAR_HOST_URL` and `SONAR_TOKEN_[SERVICE]` secrets.
 
-All releases must follow semantic versioning: `vMAJOR.MINOR.PATCH`
+**Stage 3 — Quality Gate.** After the scan the workflow checks if the SonarQube Quality Gate passed. The gate enforces rules defined in SonarQube — zero new critical bugs, zero new vulnerabilities. If the gate fails the PR is blocked and the developer must fix the issues and push again.
 
-```
-v1.0.0  ✅
-v1.2.3  ✅
-1.0.0   ❌ (missing v prefix)
-v1.0    ❌ (missing patch version)
-latest  ❌ (prohibited by Kyverno policy)
-```
+**Stage 4 — Snyk Dependency Scan.** Scans `requirements.txt` or `package.json` for known CVEs. Only HIGH and CRITICAL severity findings block the PR. Uses `SNYK_TOKEN` secret.
+
+**Stage 5 — Docker Build.** Builds the Docker image and tags it with the short git SHA (e.g. `noelmathews/auth-service:sha-a3c7d9`). The image is only in runner memory at this point — not pushed anywhere.
+
+**Stage 6 — Trivy Image Scan.** Scans the built image for OS and library vulnerabilities. If HIGH or CRITICAL findings exist the image is never pushed. A vulnerable image literally cannot leave the pipeline.
+
+**Stage 7 — Helm Lint.** Runs `helm lint --strict` on the service Helm chart. Validates YAML syntax and does a template dry-run. If the chart has errors the PR is blocked.
+
+### After Merge to Test Branch
+
+A separate job triggers on push to `test`. It rebuilds the image, pushes it to Docker Hub with the SHA tag, and writes the SHA to `service/.last-sha`. Nothing is deployed to the cluster yet.
+
+### CD Pipeline — Release Tag
+
+A team lead creates a GitHub Release with tag `auth-service-v1.2.0`. The release workflow:
+
+1. Parses the tag to extract service name and version. Reads `.last-sha` for the image SHA.
+2. Pulls the SHA-tagged image from Docker Hub and retags it as `v1.2.0` and `:latest`. Pushes both.
+3. Updates `image.tag: v1.2.0` in `values.yaml` and all environment values files. Commits using `PAT_TOKEN`.
+4. Creates a PR and auto-merges to master. This commit triggers ArgoCD.
+5. Sends success or failure email notification via Gmail SMTP.
+
+### Reusable Workflow Templates
+
+| Template | Used by |
+|----------|---------|
+| `_ci-python.yml` | All 8 FastAPI services |
+| `_ci-node.yml` | api-gateway |
+| `_ci-frontend.yml` | frontend |
+| `_ci-maintenance.yml` | Scheduled tasks |
 
 ---
 
-## Monitoring & Alerting
+## GitOps with ArgoCD
 
-### Prometheus Alerts
+ArgoCD watches the `master` branch of this repository. Every ArgoCD Application points to a specific Helm chart path. When `values.yaml` is updated by the release pipeline, ArgoCD detects the diff between Git and the cluster and automatically syncs.
 
-Alerts are defined in `infra/essential-alerts.yaml` covering three categories:
+All ArgoCD apps are configured with:
+- `automated.prune: true` — removes resources deleted from Git
+- `automated.selfHeal: true` — reverts any manual changes made directly to the cluster
+- `syncOptions: CreateNamespace=false` — namespaces created explicitly
 
-**Node & Cluster Health**
-- `NodeDown` — Node unreachable for 5 minutes (critical)
-- `NodeHighCPU` — CPU > 90% for 10 minutes (warning)
-- `NodeLowDisk` — Disk < 10% available (critical)
-- `NodeMemoryPressure` — RAM < 10% available (warning)
-- `KubeletDown` — Kubelet unreachable (critical)
+The `shared-infra` ArgoCD app is special — it deploys the gateway, all HTTPRoutes, all network policies, all secrets, all PVCs, and the Keycloak, Headlamp, and Rollouts dashboard deployments. It must be synced first before any service app.
 
-**Workload Health**
-- `PodCrashLooping` — Pod restarting > 5x per 15 minutes (critical)
-- `PendingPods` — Pod stuck Pending > 10 minutes (warning)
-- `DeploymentReplicasMismatch` — Available replicas < desired (warning)
-- `ContainerOOMKilled` — Container killed due to memory limit (critical)
-- `HPAAtMaxCapacity` — HPA at maximum replicas (warning)
-
-**Network & API**
-- `KubeAPILatency` — 99th percentile API latency > 1s (warning)
-- `CoreDNSErrors` — CoreDNS returning SERVFAIL (critical)
-- `PersistentVolumeFull` — PV > 90% full (critical)
-
-### Slack Alerting Setup
-
-Alertmanager sends alerts to `#incoming-alerts` Slack channel. The webhook URL is stored as a Kubernetes secret — never in git.
+**Apply all ArgoCD apps:**
 
 ```bash
-# Create alertmanager config with webhook
-cat > /tmp/am-config.yaml << 'EOF'
-global:
-  resolve_timeout: 5m
-route:
-  group_by: ['alertname', 'cluster', 'service']
-  group_wait: 30s
-  group_interval: 5m
-  repeat_interval: 4h
-  receiver: 'slack-notifications'
-receivers:
-- name: 'slack-notifications'
-  slack_configs:
-  - api_url: 'WEBHOOK_PLACEHOLDER'
-    channel: '#incoming-alerts'
-    send_resolved: true
-    title: '{{ .Status }} - {{ .GroupLabels.alertname }}'
-    text: >-
-      {{ range .Alerts }}
-        *Description:* {{ .Annotations.description }}
-        *Severity:* {{ .Labels.severity }}
-      {{ end }}
-EOF
+# Apply shared-infra first — creates gateway, routes, secrets, dashboard deployments
+kubectl apply -f argocd-apps/shared-infra-app.yaml
 
-# Inject webhook URL (replace with actual URL)
-sed -i "s|WEBHOOK_PLACEHOLDER|YOUR_WEBHOOK_URL|g" /tmp/am-config.yaml
+# Then apply MongoDB
+kubectl apply -f argocd-apps/mongodb-app.yaml
 
-kubectl create secret generic alertmanager-prometheus-kube-prometheus-alertmanager \
-  --from-file=alertmanager.yaml=/tmp/am-config.yaml \
-  -n monitoring --dry-run=client -o yaml | kubectl apply -f -
-
-rm /tmp/am-config.yaml
+# Then all services
+kubectl apply -f argocd-apps/
 ```
-
-### Grafana Dashboards
-
-Access Grafana at `http://<haproxy-ip>:3000`
-
-Recommended dashboard IDs to import:
-
-| Dashboard ID | Name |
-|-------------|------|
-| `315` | Kubernetes Cluster Overview |
-| `1860` | Node Exporter Full |
-| `6417` | Kubernetes Pods and Nodes |
-| `13770` | Kubernetes Persistent Volumes |
 
 ---
 
-## Storage
+## Blue-Green Deployments
 
-### Architecture
+All application services use Argo Rollouts with a blue-green strategy. When a new version is deployed:
 
-```
-Pods (/app/uploads)
-      │
-      ▼
-PVC: pc-upload-pvc (ReadWriteMany, 10Gi)
-      │
-      ▼
-PV (auto-provisioned by NFS CSI)
-      │
-      ▼
-NFS Server: /var/nfs/paycrest/<pvc-directory>
-```
-
-### Why ReadWriteMany?
-
-Multiple pods across different nodes need to read and write the same uploaded files simultaneously (KYC documents, profile photos). `ReadWriteMany` (RWX) allows this — only NFS supports RWX in our setup. `ReadWriteOnce` (RWO) would only allow one node to mount the volume at a time, breaking multi-node deployments.
-
-### Post-Deploy Permission Fix
-
-NFS provisioned directories require manual permission fix after first deployment:
+- The new version (green) starts alongside the existing version (blue)
+- All production traffic stays on blue
+- Green is accessible via a preview service for testing
+- A team member promotes manually after verifying green works
 
 ```bash
-# Get the PVC directory name
-UPLOAD_PVC=$(kubectl get pvc pc-upload-pvc -n pc-app -o jsonpath='{.spec.volumeName}')
+# Check rollout status
+kubectl argo rollouts get rollout auth-service -n pc-app
 
-# On NFS server
-chmod 777 /var/nfs/paycrest/${UPLOAD_PVC}
+# Promote green to production (instant traffic switch)
+kubectl argo rollouts promote auth-service -n pc-app
+
+# Rollback to blue immediately
+kubectl argo rollouts undo auth-service -n pc-app
 ```
-
-This is required because pods run as non-root and NFS directories are created as root by default.
 
 ---
 
-## Contributing
+## Observability
 
-We welcome contributions from all team members. Please read this section carefully before submitting any changes.
+### Metrics — Prometheus + Grafana
 
-### Development Workflow
+Prometheus scrapes metrics from all pods, nodes, and Kubernetes components via the kube-prometheus-stack Helm chart. Grafana visualizes them.
 
-```
-feature/your-feature
-        │
-        ▼
-     test branch  ←── all development work
-        │
-        │ Pull Request (after CI passes)
-        ▼
-     main branch  ←── stable, production-ready only
-```
+**Imported dashboards:**
 
-### Setting Up Local Development
+| Grafana ID | Dashboard |
+|-----------|-----------|
+| 1860 | Node Exporter Full |
+| 12740 | Kubernetes Cluster Overview |
+| 15661 | Kubernetes Pods |
+| 14584 | ArgoCD |
+| 15141 | Loki Logs |
+
+### Logs — Loki + Promtail
+
+Promtail runs as a DaemonSet on every node and collects all container logs. It pushes them to Loki which stores them with NFS-backed persistence. Logs are queried via Grafana Explore using LogQL.
+
+**Grafana Loki datasource URL:** `http://loki-gateway.logging.svc.cluster.local`
+
+### Alerts — AlertManager
+
+AlertManager is configured for email notifications on critical events: pod crashes, high CPU, high memory, node down. Config is in `monitoring/alertmanager-config.yaml`.
+
+### Kubernetes Dashboard — Headlamp
+
+Headlamp is deployed in `kube-system` and accessible at `headlamp.paycrest.online`. Login with the permanent service account token:
 
 ```bash
-# Clone the repo
-git clone https://github.com/YOUR-ORG/PayCrest-Dev.git
-cd PayCrest-Dev
-
-# Create your feature branch from test
-git checkout test
-git pull origin test
-git checkout -b feature/your-feature-name
-
-# Make your changes
-# ...
-
-# Push and create PR to test
-git push origin feature/your-feature-name
+kubectl get secret headlamp-admin-token -n kube-system \
+  -o jsonpath='{.data.token}' | base64 -d && echo
 ```
 
 ---
 
-## Pull Request Guidelines
+## Identity & Access Management
 
-### Before Opening a PR
+Keycloak runs in the `keycloak` namespace and is integrated with the Kubernetes API server via OIDC. This means team members log into the cluster using their Keycloak credentials instead of a shared kubeconfig.
 
-- [ ] Your branch is up to date with `test`
-- [ ] All GitHub Actions checks pass on your branch
-- [ ] You have tested your changes locally or in a dev cluster
-- [ ] Helm chart changes have been validated with `helm lint`
-- [ ] No secrets or credentials are committed
-- [ ] Docker images use pinned version tags (no `latest`)
-- [ ] Resource requests and limits are defined for any new containers
-- [ ] NetworkPolicies are updated if new namespaces or ports are introduced
+### Realm and Groups
 
-### PR Title Format
+- **Realm:** `paycrest`
+- **Client:** `kubernetes`
+- **Groups and access:**
 
-```
-[SERVICE] Brief description of change
+| Group | Members | Kubernetes Access |
+|-------|---------|-------------------|
+| cluster-admins | Noel | Full cluster-admin |
+| dev-team | Praveen, Surya | Read-only (get, list, watch) |
+| test-team | Nimesh, Thanusri, Chandana | Read-only (get, list, watch) |
 
-Examples:
-[auth-service] Add MPIN reset endpoint
-[helm] Update loan-service HPA max replicas to 6
-[ci] Add vulnerability threshold to Trivy scan
-[monitoring] Add alert for high MongoDB connections
-```
+### Team kubectl Access
 
-### PR Description Template
+Team members use the kubeconfig in `Cluster-Initialization/team-config.yaml` with the `kubelogin` plugin:
 
-```markdown
-## What does this PR do?
-<!-- Brief description of the change -->
+```bash
+# Install kubelogin
+curl -Lo kubelogin.zip \
+  https://github.com/int128/kubelogin/releases/latest/download/kubelogin_linux_amd64.zip
+unzip kubelogin.zip && sudo mv kubelogin /usr/local/bin/kubectl-oidc_login
 
-## Why is this change needed?
-<!-- Business or technical justification -->
-
-## How was it tested?
-<!-- Local testing, cluster testing, curl commands used -->
-
-## Checklist
-- [ ] Helm lint passes
-- [ ] No hardcoded secrets
-- [ ] Resource limits defined
-- [ ] NetworkPolicy updated if needed
-- [ ] CI pipeline passes
-
-## Related Issues
-<!-- Link any related GitHub issues -->
-```
-
-### Review Requirements
-
-- Minimum **1 approval** required before merging to `test`
-- Minimum **2 approvals** required before merging to `main`
-- All CI checks must pass
-- No unresolved review comments
-
-### Merging to Main
-
-Only merge to `main` when:
-1. The feature is fully tested on the `test` branch
-2. All security scans pass (SonarQube quality gate, Snyk, Trivy)
-3. A release version tag has been agreed upon
-4. The team lead has approved
-
----
-
-## Branch Strategy
-
-| Branch | Purpose | Direct Push |
-|--------|---------|------------|
-| `main` | Production-ready code | ❌ PR only |
-| `test` | Integration testing | ✅ Team leads only |
-| `feature/*` | New features | ✅ Author only |
-| `fix/*` | Bug fixes | ✅ Author only |
-| `hotfix/*` | Critical production fixes | ✅ With lead approval |
-
-### Branch Naming Convention
-
-```
-feature/add-loan-approval-endpoint
-fix/kyc-upload-permission-error
-hotfix/mongodb-connection-timeout
-chore/update-helm-values-structure
-docs/update-deployment-guide
+# Use the team kubeconfig — will prompt for Keycloak credentials
+kubectl get nodes
 ```
 
 ---
 
-## Security Policy
+## Network Security
 
-### Reporting a Vulnerability
+Zero-trust network policies enforced by Calico. Each namespace can only communicate with exactly what it needs.
 
-If you discover a security vulnerability in this project, **do not open a public GitHub issue**. Instead:
+| Policy | Rule |
+|--------|------|
+| `gateway-policy` | pc-gateway can only egress to pc-frontend (:80), pc-edge (:3000), kgateway-system |
+| `gateway-shield` | pc-edge only accepts ingress from pc-gateway, only egresses to pc-app (:8000) |
+| `frontend-isolation` | pc-frontend only accepts ingress from pc-gateway |
+| `app-isolation` | pc-app accepts from pc-edge (:8000), egresses to pc-data (:27017) and internet (:443 for Cashfree) |
+| `allow-from-app` | MongoDB only accepts ingress from pc-app (:27017) |
 
-1. Email the security team directly at the address configured in `DEVELOPMENT_TEAM_EMAIL`
-2. Include a detailed description of the vulnerability
-3. Include steps to reproduce
-4. Include the potential impact
+All policies defined in `shared-infra/Helm/templates/network-policies.yaml`.
 
-We will acknowledge receipt within **48 hours** and provide a resolution timeline.
+---
 
-### Security Controls in Place
+## Storage Strategy
 
-| Control | Implementation | Purpose |
-|---------|---------------|---------|
-| Network isolation | Kubernetes NetworkPolicies | Prevent lateral movement |
-| Admission control | Kyverno ClusterPolicy | Enforce image tags and resource limits |
-| Secret management | Kubernetes Secrets | Credentials never in git |
-| Container scanning | Trivy (CI/CD) | Detect CVEs before deployment |
-| Dependency scanning | Snyk | Detect vulnerable packages |
-| Code quality | SonarQube | Detect code vulnerabilities |
-| Image policy | No `latest` tags allowed | Ensure reproducible deployments |
-| Resource limits | Defined on all containers | Prevent resource exhaustion attacks |
+Every stateful workload has its own dedicated PVC. All use the `nfs-csi` StorageClass backed by the NFS server.
 
-### Secrets Management Rules
+| PVC | Namespace | Size | Access Mode | Used By |
+|-----|-----------|------|-------------|---------|
+| `pc-upload-pvc` | pc-app | 10Gi | ReadWriteMany | File uploads across microservices |
+| `mongodb-data` | pc-data | 20Gi | ReadWriteOnce | MongoDB StatefulSet |
+| `keycloak-data` | keycloak | 2Gi | ReadWriteOnce | Keycloak H2 database |
+| `storage-loki-0` | logging | 10Gi | ReadWriteOnce | Loki log storage |
 
-- **Never commit secrets to git** — use Kubernetes Secrets
-- **Never log secrets** — check application logs before pushing
-- **Never expose webhook URLs** in terminal output or chat
-- **Rotate secrets** if accidentally exposed
-- JWT secrets and internal service tokens must be rotated before production use
-- MongoDB credentials must be changed from the defaults in `values.yaml`
+> **Note on Keycloak storage:** Keycloak uses a dedicated NFS subdirectory `/var/nfs/keycloak` instead of the shared `/var/nfs/paycrest`. This prevents H2 database file locking conflicts that occur when multiple services share the same NFS path.
 
-### Kyverno Admission Policies
+---
 
-The cluster enforces these policies on all pods:
+## Dashboard URLs
 
-```yaml
-# All containers must have CPU and memory limits
-# Image tag 'latest' is prohibited
-# (See infra/kyverno-policies.yaml for full policy)
+| URL | Tool | Auth |
+|-----|------|------|
+| [paycrest.online](https://paycrest.online) | Application | App login |
+| [grafana.paycrest.online](https://grafana.paycrest.online) | Grafana | admin / (set on install) |
+| [prometheus.paycrest.online](https://prometheus.paycrest.online) | Prometheus | HAProxy basic auth |
+| [argocd.paycrest.online](https://argocd.paycrest.online) | ArgoCD | ArgoCD login |
+| [rollouts.paycrest.online](https://rollouts.paycrest.online) | Argo Rollouts | HAProxy basic auth |
+| [keycloak.paycrest.online](https://keycloak.paycrest.online) | Keycloak | Keycloak admin |
+| [headlamp.paycrest.online](https://headlamp.paycrest.online) | Headlamp | Service account token |
+| [loki.paycrest.online](https://loki.paycrest.online) | Loki Gateway | HAProxy basic auth |
+| [sonar.paycrest.online](https://sonar.paycrest.online) | SonarQube | SonarQube login |
+
+---
+
+## Getting Started (New Cluster)
+
+For a complete step-by-step guide to setting up this entire infrastructure from scratch — including EC2 provisioning, Kubernetes installation, NFS setup, HAProxy SSL configuration, tool installation, and application deployment — refer to the **Implementation Manual** in the project documentation.
+
+**High-level order:**
+
+```
+1.  Provision EC2 instances
+2.  Run k8s-install.sh on every node
+3.  kubeadm init on master, join workers
+4.  Install: Calico, Metrics Server, NFS CSI, kgateway
+5.  Configure HAProxy + SSL (Certbot)
+6.  Install: ArgoCD, Argo Rollouts, Prometheus+Grafana, Loki+Promtail, SonarQube
+7.  Update shared-infra/Helm/values.yaml with your NFS IP and secrets
+8.  kubectl apply -f argocd-apps/shared-infra-app.yaml
+9.  kubectl apply -f argocd-apps/mongodb-app.yaml
+10. kubectl apply -f argocd-apps/
+11. Configure Keycloak realm, client, groups, users
+12. Add OIDC flags to kube-apiserver
+13. Verify all URLs are accessible
 ```
 
-### Production Security Checklist
+---
 
-Before going to production, ensure:
+## GitHub Secrets Required
 
-- [ ] Change all default passwords in `values.yaml`
-- [ ] Rotate JWT secret to a cryptographically random 256-bit value
-- [ ] Rotate `INTERNAL_SERVICE_TOKEN`
-- [ ] Change MongoDB credentials from `pycrest/pycrest123`
-- [ ] Enable TLS on the kgateway listener (port 443)
-- [ ] Restrict HAProxy to specific IP ranges if possible
-- [ ] Enable Kubernetes audit logging
-- [ ] Set up regular etcd backups
+### Shared Secrets
+
+| Secret | Purpose |
+|--------|---------|
+| `DOCKER_USERNAME` | Docker Hub username |
+| `DOCKER_PASSWORD` | Docker Hub access token |
+| `SNYK_TOKEN` | Snyk vulnerability scanner |
+| `PAT_TOKEN` | GitHub PAT (repo scope) for auto-merge |
+| `SONAR_HOST_URL` | `https://sonar.paycrest.online` |
+| `MAIL_USERNAME` | Gmail address for notifications |
+| `MAIL_PASSWORD` | Gmail app password |
+| `DEVELOPMENT_TEAM_EMAIL` | Team email for release notifications |
+
+### Per-Service SonarQube Tokens
+
+| Secret | Service |
+|--------|---------|
+| `SONAR_TOKEN_FRONTEND` | frontend |
+| `SONAR_TOKEN_API_GATEWAY` | api-gateway |
+| `SONAR_TOKEN_AUTH_SERVICE` | auth-service |
+| `SONAR_TOKEN_LOAN_SERVICE` | loan-service |
+| `SONAR_TOKEN_ADMIN_SERVICE` | admin-service |
+| `SONAR_TOKEN_MANAGER_SERVICE` | manager-service |
+| `SONAR_TOKEN_VERIFICATION_SERVICE` | verification-service |
+| `SONAR_TOKEN_PAYMENT_SERVICE` | payment-service |
+| `SONAR_TOKEN_WALLET_SERVICE` | wallet-service |
+| `SONAR_TOKEN_EMI_SERVICE` | emi-service |
 
 ---
 
-## Known Issues & Workarounds
+## Team Access
 
-| Issue | Cause | Workaround |
-|-------|-------|-----------|
-| KYC upload 500 error | NFS directory permissions | `chmod 777` on PVC directory after deploy |
-| Services crash after MongoDB restart | MongoDB headless service DNS (pod IP changes) | Run `infra/update-mongo-ip.sh` |
-| DNS broken on node after containerd reinstall | Calico rp_filter reset | Cordon node, kubeadm reset, rejoin |
-
----
-
-## DevOps Learning Outcomes
-
-This project demonstrates the following real-world DevOps competencies:
-
-| Competency | Implementation |
-|-----------|---------------|
-| Infrastructure as Code | Helm umbrella chart with values-based templating |
-| GitOps | GitHub Actions triggering from branch events |
-| Security-first design | NetworkPolicies, Kyverno, Trivy, Snyk, SonarQube |
-| High Availability | Anti-affinity, multiple replicas, rolling updates |
-| Auto-scaling | HPA on api-gateway and loan-service |
-| Observability | Prometheus metrics, Grafana dashboards, Slack alerts |
-| Persistent storage | NFS CSI with ReadWriteMany PVCs |
-| Zero-downtime deployments | RollingUpdate strategy with maxUnavailable:1 |
-| Namespace isolation | 5 namespaces with strict NetworkPolicy boundaries |
-| Secret management | Kubernetes Secrets, never in git |
+| Name | Role | Keycloak Group | Cluster Access |
+|------|------|---------------|----------------|
+| Noel | DevOps Lead | cluster-admins | Full cluster-admin |
+| Praveen | Developer | dev-team | Read-only |
+| Surya | Developer | dev-team | Read-only |
+| Nimesh | QA | test-team | Read-only |
+| Thanusri | QA | test-team | Read-only |
+| Chandana | QA | test-team | Read-only |
 
 ---
 
-## License
+## Branching Strategy
 
-This project is developed for **DevOps training purposes**. All rights reserved by the PayCrest development team.
+```
+master ──────────────────────────────────► production (ArgoCD watches this)
+         ↑ release PR auto-merged by CD
+test ────────────────────────────────────► staging / CI target
+         ↑ feature PRs merged here
+feature/* ───────────────────────────────► development
+```
+
+- All PRs target `test` and must pass all 7 CI stages before merge
+- Merges to `test` trigger Docker image build and push
+- Release tags (`service-name-vX.Y.Z`) trigger the CD pipeline
+- CD pipeline auto-merges to `master` which triggers ArgoCD
 
 ---
 
-<div align="center">
-
-Built with ❤️ by the PayCrest DevOps Team
-
-*This project was built as part of a comprehensive DevOps training program covering the complete software delivery lifecycle from code to production.*
-
-</div>
+*Built by the PayCrest DevOps Team*

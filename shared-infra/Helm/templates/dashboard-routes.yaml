@@ -1,0 +1,225 @@
+# ReferenceGrants
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-from-gateway
+  namespace: monitoring
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: monitoring
+  to:
+  - group: ""
+    kind: Service
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-from-gateway
+  namespace: logging
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: logging
+  to:
+  - group: ""
+    kind: Service
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-from-gateway
+  namespace: argocd
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: argocd
+  to:
+  - group: ""
+    kind: Service
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-from-gateway
+  namespace: argo-rollouts
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: argo-rollouts
+  to:
+  - group: ""
+    kind: Service
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-from-gateway
+  namespace: keycloak
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: keycloak
+  to:
+  - group: ""
+    kind: Service
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-from-gateway
+  namespace: kube-system
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: kube-system
+  to:
+  - group: ""
+    kind: Service
+---
+# HTTPRoutes
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: grafana-route
+  namespace: monitoring
+spec:
+  parentRefs:
+  - name: paycrest-kgate
+    namespace: pc-gateway
+  hostnames:
+  - "grafana.paycrest.online"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: prometheus-grafana
+      port: 80
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: prometheus-route
+  namespace: monitoring
+spec:
+  parentRefs:
+  - name: paycrest-kgate
+    namespace: pc-gateway
+  hostnames:
+  - "prometheus.paycrest.online"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: prometheus-kube-prometheus-prometheus
+      port: 9090
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: argocd-route
+  namespace: argocd
+spec:
+  parentRefs:
+  - name: paycrest-kgate
+    namespace: pc-gateway
+  hostnames:
+  - "argocd.paycrest.online"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: argocd-server
+      port: 80
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: rollouts-route
+  namespace: argo-rollouts
+spec:
+  parentRefs:
+  - name: paycrest-kgate
+    namespace: pc-gateway
+  hostnames:
+  - "rollouts.paycrest.online"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: rollouts-dashboard
+      port: 3100
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: keycloak-route
+  namespace: keycloak
+spec:
+  parentRefs:
+  - name: paycrest-kgate
+    namespace: pc-gateway
+  hostnames:
+  - "keycloak.paycrest.online"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: keycloak
+      port: 8080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: headlamp-route
+  namespace: kube-system
+spec:
+  parentRefs:
+  - name: paycrest-kgate
+    namespace: pc-gateway
+  hostnames:
+  - "headlamp.paycrest.online"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: headlamp
+      port: 80
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: loki-route
+  namespace: logging
+spec:
+  parentRefs:
+  - name: paycrest-kgate
+    namespace: pc-gateway
+  hostnames:
+  - "loki.paycrest.online"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: loki-gateway
+      port: 80

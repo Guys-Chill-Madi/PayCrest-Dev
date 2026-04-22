@@ -40,13 +40,12 @@ metadata:
   name: rollouts-dashboard
   namespace: argo-rollouts
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: rollouts-dashboard
   ports:
     - port: 3100
       targetPort: 3100
-      nodePort: 30100
 
 ---
 
